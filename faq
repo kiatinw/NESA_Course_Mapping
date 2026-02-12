@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQs - NESA Course Mapping Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #6495ED 0%, #4169E1 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6495ED 0%, #4169E1 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: white;
+            color: #4169E1;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: #f0f4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .faq-section {
+            margin-bottom: 40px;
+        }
+
+        .faq-section h2 {
+            color: #4169E1;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #6495ED;
+        }
+
+        .faq-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #6495ED;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .faq-answer {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .faq-answer ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .faq-answer li {
+            margin: 5px 0;
+        }
+
+        .faq-answer code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        .tip-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .tip-box strong {
+            color: #1976d2;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .warning-box strong {
+            color: #e65100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Tool
+            </a>
+            <h1>❓ Help & FAQs</h1>
+            <p>Frequently Asked Questions</p>
+        </div>
+
+        <div class="content">
+            <!-- General Questions -->
+            <div class="faq-section">
+                <h2>🚀 Getting Started</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">What does this tool do?</div>
+                    <div class="faq-answer">
+                        This tool automates the process of mapping student enrolments from Sentral to NESA course codes. It:
+                        <ul>
+                            <li>Matches students from Sentral with NESA student records</li>
+                            <li>Automatically maps class codes (like MMA, SPH) to NESA course numbers</li>
+                            <li>Generates a CSV file ready to upload to Schools Online</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What files do I need?</div>
+                    <div class="faq-answer">
+                        You need three files:
+                        <ul>
+                            <li><strong>Student Attendance Spreadsheet</strong> - exported from Sentral (Profiles → Exports)</li>
+                            <li><strong>NESA Course Codes</strong> - downloaded from Schools Online (Courses Offered at Your School)</li>
+                            <li><strong>NESA Template</strong> - downloaded from Schools Online (Load Student Courses from a file → create entry file)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Is my data safe?</div>
+                    <div class="faq-answer">
+                        Yes! This tool runs entirely in your browser. No data is uploaded to any server - everything stays on your computer. The files you upload are processed locally and never leave your machine.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Matching -->
+            <div class="faq-section">
+                <h2>👥 Student Matching</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">Why aren't all students automatically matched?</div>
+                    <div class="faq-answer">
+                        Students are matched based on surname and first name. Automatic matching fails when:
+                        <ul>
+                            <li>Names are spelled differently in Sentral vs NESA (e.g., "Jon" vs "John")</li>
+                            <li>Students use different first names (e.g., nickname vs legal name)</li>
+                            <li>There are multiple students with the same name</li>
+                            <li>Student is new and doesn't have a NESA record yet</li>
+                        </ul>
+                        <div class="tip-box">
+                            <strong>Tip:</strong> Use the dropdown to manually match these students. The tool shows you all available NESA students with their IDs to help you find the right match.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What if a student doesn't have a NESA number?</div>
+                    <div class="faq-answer">
+                        If a student doesn't appear in the NESA template file, select "-- No NESA match --" in the dropdown. The student will appear in the final output with blank NESA ID fields. You'll need to delete this student's row before uploading to Schools Online.
+                        <div class="warning-box">
+                            <strong>Important:</strong> Schools Online will reject files containing students without NESA IDs. Always delete these rows before uploading!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Can I hide the matched students?</div>
+                    <div class="faq-answer">
+                        Yes! Click the "👁️ Hide Matched Students" button to show only students that need manual review. This saves scrolling when you have many students.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Class Mapping -->
+            <div class="faq-section">
+                <h2>📚 Class Mapping</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">How does automatic class mapping work?</div>
+                    <div class="faq-answer">
+                        The tool extracts the subject code from your class codes (e.g., <code>11MMA3</code> → <code>MMA</code>) and matches them to NESA course names. For example:
+                        <ul>
+                            <li><code>MMA</code> → "Mathematics Advanced"</li>
+                            <li><code>SPH</code> → "Physics"</li>
+                            <li><code>HBS</code> → "Business Studies"</li>
+                        </ul>
+                        The tool knows about 60+ different subject codes!
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What's the difference between Year 10 and Year 11?</div>
+                    <div class="faq-answer">
+                        <strong>Year 10:</strong> The tool prefers 200-hour courses (Elective courses)
+                        <br><strong>Year 11:</strong> The tool maps to Preliminary courses and avoids Life Skills courses
+                        <br><br>
+                        Always select the correct year level before clicking "Re-run Auto-Mapping"!
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What do I do with unmapped classes?</div>
+                    <div class="faq-answer">
+                        Classes that couldn't be automatically mapped will:
+                        <ul>
+                            <li>Keep their original code (e.g., <code>ABC</code> stays as <code>ABC</code>)</li>
+                            <li>Be listed in the warning box at the end</li>
+                        </ul>
+                        You must manually select the correct NESA course from the dropdown, or enter the course code manually in the text box.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Can I delete classes from the output?</div>
+                    <div class="faq-answer">
+                        Yes! Check the "Delete" box next to any class you don't want in the output. This is useful for:
+                        <ul>
+                            <li>Study periods</li>
+                            <li>Home room/pastoral care</li>
+                            <li>Non-academic classes</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Can I enter a course code manually?</div>
+                    <div class="faq-answer">
+                        Yes! If the dropdown doesn't have the course you need, type the NESA course code directly in the text box. This is useful for:
+                        <ul>
+                            <li>Board Endorsed Courses</li>
+                            <li>VET courses</li>
+                            <li>Unusual electives not in the list</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output & Upload -->
+            <div class="faq-section">
+                <h2>📤 Output & Upload</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">What do I do with the output file?</div>
+                    <div class="faq-answer">
+                        Before uploading to Schools Online:
+                        <ol>
+                            <li><strong>Delete students without NESA IDs</strong> (rows with blank NESA Student ID)</li>
+                            <li><strong>Delete columns C, D, and E</strong> (Surname, Given Names, Student ID from Sentral - these were for your verification only)</li>
+                            <li><strong>Check for unmapped classes</strong> - look for any class codes that are still showing as <code>MMA</code>, <code>SPH</code>, etc. instead of course numbers</li>
+                            <li><strong>Verify it's still a CSV</strong> - make sure you didn't accidentally save it as Excel format</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Why do columns C, D, and E exist?</div>
+                    <div class="faq-answer">
+                        These columns contain the student information from Sentral:
+                        <ul>
+                            <li>Column C: Surname (Enrolment)</li>
+                            <li>Column D: Given Names (Enrolment)</li>
+                            <li>Column E: Student ID (Enrolment)</li>
+                        </ul>
+                        They're there so you can double-check the matching was correct, especially for students with common surnames. You MUST delete these columns before uploading to Schools Online.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What are the warnings at the end telling me?</div>
+                    <div class="faq-answer">
+                        The tool shows you three types of warnings:
+                        <ul>
+                            <li><strong>Unmatched Students:</strong> Students from Sentral that couldn't be matched to NESA records</li>
+                            <li><strong>Unmapped Classes:</strong> Class codes that couldn't be automatically matched to NESA courses</li>
+                            <li><strong>Manually Overridden Classes:</strong> Classes where you typed in a course code manually (just FYI)</li>
+                        </ul>
+                        Review these carefully before uploading!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="faq-section">
+                <h2>🔧 Troubleshooting</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">The tool isn't loading my file</div>
+                    <div class="faq-answer">
+                        Check these common issues:
+                        <ul>
+                            <li>Make sure you're using the correct file format (.xls/.xlsx for Sentral, .csv for NESA)</li>
+                            <li>Don't modify the files after downloading - use them as-is</li>
+                            <li>Make sure you selected the correct export settings in Sentral</li>
+                            <li>Try refreshing the page and starting over</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">The automatic mapping didn't work for a subject</div>
+                    <div class="faq-answer">
+                        This can happen if:
+                        <ul>
+                            <li>The subject code isn't in the tool's database (60+ subjects are included, but we can't cover everything)</li>
+                            <li>Your school uses a different naming convention</li>
+                            <li>It's a Board Endorsed Course or VET subject with a unique code</li>
+                        </ul>
+                        Just manually select the course from the dropdown or type the course code in the text box.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Schools Online rejected my file</div>
+                    <div class="faq-answer">
+                        Common reasons:
+                        <ul>
+                            <li>Students without NESA IDs are still in the file - delete them!</li>
+                            <li>Columns C, D, E weren't deleted</li>
+                            <li>File was saved as .xlsx instead of .csv</li>
+                            <li>Class codes (like <code>MMA</code>) instead of course numbers (like <code>15210</code>) are still in the file</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">I made a mistake - can I start over?</div>
+                    <div class="faq-answer">
+                        Yes! Just click the "Start New Mapping" button at the end, or refresh the page. Your uploaded files aren't saved, so you'll need to upload them again.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips & Tricks -->
+            <div class="faq-section">
+                <h2>💡 Tips & Tricks</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">Best practices for using this tool</div>
+                    <div class="faq-answer">
+                        <ul>
+                            <li>Always review the automatic matches - don't blindly trust them, especially for students with common surnames</li>
+                            <li>Use the "Hide Matched Students" button to speed up manual matching</li>
+                            <li>Select the correct year level (10 or 11) before running the class mapping</li>
+                            <li>Keep the warning boxes open while checking your output file - they tell you what needs fixing</li>
+                            <li>Save your work - download the file as soon as it's ready, as the browser doesn't save it automatically</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Keyboard shortcuts</div>
+                    <div class="faq-answer">
+                        <ul>
+                            <li><strong>Tab:</strong> Move to next dropdown/field</li>
+                            <li><strong>Space:</strong> Open dropdown</li>
+                            <li><strong>Arrow keys:</strong> Navigate dropdown options</li>
+                            <li><strong>Enter:</strong> Select option</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="faq-section">
+                <h2>📧 Still Need Help?</h2>
+
+                <div class="faq-item">
+                    <div class="faq-answer">
+                        If you're still stuck or have found a bug, please:
+                        <ul>
+                            <li>Check you've followed all steps correctly</li>
+                            <li>Try using different files to see if the issue persists</li>
+                            <li>Clear your browser cache and try again</li>
+                        </ul>
+                        <div class="tip-box">
+                            <strong>Note:</strong> This tool was created to save time on a repetitive manual process. While it handles most cases automatically, some manual review and adjustment is always necessary!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
