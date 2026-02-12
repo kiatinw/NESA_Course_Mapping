@@ -380,7 +380,21 @@
                     <li>Only .xls or .xlsx files are accepted. Do not modify the spreadsheet once downloaded from Sentral.</li>
                  </ul>
 
-                <style> .instruction-image img { max-width: 600px; width: 100%; border: 1px solid #ccc; border-radius: 6px; margin: 10px 0 20px; display: block; } </style>
+                <style>
+                    .instruction-image {
+                        text-align: center;
+                        margin: 15px 0;
+                    }
+                
+                    .instruction-image img {
+                        max-width: 600px;
+                        width: 100%;
+                        border: 1px solid #ccc;
+                        border-radius: 6px;
+                        display: inline-block;
+                    }
+                </style>
+
 
                  <div class="instruction-image">
                        <img src="SentralSettings.png" alt="Sentral export settings screenshot" />
@@ -397,40 +411,63 @@
               </div>
 
 
-            <!-- STEP 2: Upload Course Codes -->
+            <!-- STEP 2: Upload NESA Course Codes -->
             <div class="step" id="step2">
                 <div class="step-header">
                     <div class="step-number">2</div>
-                    <div class="step-title">Upload Course Codes</div>
+                    <div class="step-title">Upload NESA Course Codes</div>
                 </div>
+            
+                <ul class="step-instructions">
+                    <li>In Schools Online, go to <b>Courses Offered at Your School</b>.</li>
+                    <li>Change the year of study to the one you are working with.</li>
+                    <li>Select <b>Show only courses offered</b>. This will show courses offered at your school and make matching easier.</li>
+                    <li>Click on the download button. Do not make any changes to the file.</li>
+                </ul>
+            
                 <div class="file-upload">
                     <label for="courseFile">Select NESA course codes file (.csv):</label>
                     <input type="file" id="courseFile" accept=".csv" />
                     <div class="file-status" id="courseStatus"></div>
                 </div>
+            
                 <div class="progress-info" id="courseProgress"></div>
             </div>
 
-            <!-- STEP 3: Upload NESA Student Data -->
+
+            <!-- STEP 3: Upload NESA Template -->
             <div class="step" id="step3">
                 <div class="step-header">
                     <div class="step-number">3</div>
-                    <div class="step-title">Upload NESA Student Data</div>
+                    <div class="step-title">Upload NESA Template</div>
                 </div>
+            
+                <ul class="step-instructions">
+                    <li>In Schools Online, go to <b>20XX Enrolments</b>. </li>
+                    <li>Select <b>Load Student Courses from a file</b>.</li>
+                    <li>Make sure the correct year of study is selected.</li>
+                    <li>On the left, click on <b>create entry file</b> to download the file. Do not make any changes to the file.</li>
+                </ul>
+            
                 <div class="file-upload">
                     <label for="nesaStudentFile">Select NESA student data file (.csv):</label>
                     <input type="file" id="nesaStudentFile" accept=".csv" />
                     <div class="file-status" id="nesaStudentStatus"></div>
                 </div>
+            
                 <div class="progress-info" id="nesaStudentProgress"></div>
+            
                 <div id="matchingContainer" class="hidden">
                     <div class="info-box" style="margin-top: 20px;">
                         Review automatic matches below. Unmatched students can be manually matched using the dropdowns.
                     </div>
                     <div id="matchingList"></div>
-                    <button id="confirmMatchingBtn" onclick="confirmMatching()" style="margin-top: 20px;">Confirm Matching & Continue</button>
+                    <button id="confirmMatchingBtn" onclick="confirmMatching()" style="margin-top: 20px;">
+                        Confirm Matching & Continue
+                    </button>
                 </div>
             </div>
+
 
             <!-- STEP 4: Map Classes to Courses -->
             <div class="step" id="step4">
@@ -439,7 +476,7 @@
                     <div class="step-title">Map Classes to NESA Courses</div>
                 </div>
                 <div class="info-box">
-                    Map each unique class code to its corresponding NESA course. Unmapped classes will retain their original names in the output.
+                    Map each unique class code to its corresponding NESA course. Unmapped classes will retain their original names in the output. You will need to manually map any courses that were not automatically matched, and any Board Endorsed courses.
                 </div>
                 
                 <!-- Year Level Selector -->
