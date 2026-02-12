@@ -589,7 +589,7 @@
                                 .map(row => ({
                                     number: row['Course Number'].trim(),
                                     name: row['Course Name'].trim(),
-                                    hours: row['Hours'] ? parseInt(row['Hours'].trim()) : null
+                                    hours: row['Number of hours'] ? parseInt(row['Number of hours'].trim()) : null
                                 }));
 
                         
@@ -1001,39 +1001,14 @@
         function rerunAutoMapping() {
             // Clear previous auto-mappings
             window.autoMappings = {};
-            
-            // Re-run the auto-mapping with new year level
+        
+            // Re-run auto-mapping for the selected year level
             performAutomaticClassMapping();
-            
-            // Update all the dropdowns with new mappings
-            uniqueClasses.forEach(className => {
-                const select = document.getElementById(`mapping_${className}`);
-                if (!select) return;
-                
-                // Reset to default first
-                select.value = '';
-                
-                // Apply new auto-mapping if it exists
-                if (window.autoMappings && window.autoMappings[className]) {
-                    select.value = window.autoMappings[className];
-                }
-            });
-            
-            // Update the info message
-            const container = document.getElementById('mappingContainer');
-            const existingInfo = container.querySelector('.info-box');
-            if (existingInfo) {
-                const autoMappedCount = uniqueClasses.filter(className => {
-                    return window.autoMappings && window.autoMappings[className];
-                }).length;
-                
-                if (autoMappedCount > 0) {
-                    existingInfo.innerHTML = `✓ Automatically pre-selected ${autoMappedCount} of ${uniqueClasses.length} class mappings based on course names. Please review and adjust as needed.`;
-                } else {
-                    existingInfo.remove();
-                }
-            }
+        
+            // Re-generate the mapping interface (dropdowns + info box)
+            generateMappingInterface();
         }
+
 
         function processStudentData(jsonData) {
             const headers = jsonData[0];
