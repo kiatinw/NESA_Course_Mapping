@@ -994,13 +994,7 @@
                         window.autoMappings[className] = bestMatch;
                     }
 
-                
-                // If we found a decent match, pre-select it
-                if (bestMatch && bestScore > 0) {
-                    // Store the mapping for when the dropdown is created
-                    if (!window.autoMappings) window.autoMappings = {};
-                    window.autoMappings[className] = bestMatch;
-                }
+            
             });
         }
 
