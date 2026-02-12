@@ -626,10 +626,20 @@
             `;
             container.appendChild(stats);
             
+            // Sort students: unmatched first, then matched
+            const sortedStudents = studentData.students.map((student, index) => ({
+                student,
+                index,
+                isMatched: studentMatching.hasOwnProperty(index)
+            })).sort((a, b) => {
+                // Unmatched (false) comes before matched (true)
+                if (a.isMatched === b.isMatched) return 0;
+                return a.isMatched ? 1 : -1;
+            });
+            
             // Generate matching items for each student
-            studentData.students.forEach((student, enrolIndex) => {
+            sortedStudents.forEach(({ student, index: enrolIndex, isMatched }) => {
                 const item = document.createElement('div');
-                const isMatched = studentMatching.hasOwnProperty(enrolIndex);
                 item.className = `match-item ${isMatched ? 'matched' : 'unmatched'}`;
                 
                 const enrolName = `${student.surname}, ${student.givenNames}`;
