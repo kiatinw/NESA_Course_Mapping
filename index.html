@@ -424,6 +424,27 @@
                 <div class="info-box">
                     Map each unique class code to its corresponding NESA course. Unmapped classes will retain their original names in the output.
                 </div>
+                
+                <!-- Year Level Selector -->
+                <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">
+                        📅 Select Year Level (for auto-mapping):
+                    </label>
+                    <div style="display: flex; gap: 15px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="yearLevel" value="10" id="year10" style="margin-right: 8px;">
+                            <span>Year 10</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="yearLevel" value="11" id="year11" checked style="margin-right: 8px;">
+                            <span>Year 11</span>
+                        </label>
+                    </div>
+                    <button onclick="rerunAutoMapping()" style="margin-top: 10px; padding: 8px 20px; font-size: 14px;">
+                        🔄 Re-run Auto-Mapping
+                    </button>
+                </div>
+                
                 <div class="mapping-container" id="mappingContainer"></div>
                 <button id="generateBtn" onclick="generateOutput()" disabled>Generate Output Spreadsheet</button>
             </div>
@@ -607,7 +628,8 @@
             const matchedCount = Object.keys(studentMatching).length;
             const unmatchedCount = studentData.students.length - matchedCount;
             
-            // Add stats display
+            // Add stats display with toggle button
+            const statsWrapper = document.createElement('div');
             const stats = document.createElement('div');
             stats.className = 'match-stats';
             stats.innerHTML = `
@@ -624,7 +646,26 @@
                     <div class="stat-label">Total Students</div>
                 </div>
             `;
-            container.appendChild(stats);
+            statsWrapper.appendChild(stats);
+            
+            // Add toggle button
+            const toggleBtn = document.createElement('button');
+            toggleBtn.textContent = '👁️ Hide Matched Students';
+            toggleBtn.style.marginTop = '10px';
+            toggleBtn.id = 'toggleMatchedBtn';
+            let showMatched = true;
+            
+            toggleBtn.onclick = function() {
+                showMatched = !showMatched;
+                const matchedItems = document.querySelectorAll('.match-item.matched');
+                matchedItems.forEach(item => {
+                    item.style.display = showMatched ? 'grid' : 'none';
+                });
+                toggleBtn.textContent = showMatched ? '👁️ Hide Matched Students' : '👁️ Show Matched Students';
+            };
+            
+            statsWrapper.appendChild(toggleBtn);
+            container.appendChild(statsWrapper);
             
             // Sort students: unmatched first, then matched
             const sortedStudents = studentData.students.map((student, index) => ({
@@ -740,6 +781,182 @@
             document.getElementById('step4').scrollIntoView({ behavior: 'smooth' });
         }
 
+        function performAutomaticClassMapping() {
+            // Get selected year level
+            const year10Selected = document.getElementById('year10').checked;
+            const year11Selected = document.getElementById('year11').checked;
+            
+            // School-specific subject codes and their NESA course keywords
+            // Pattern: First letter = Faculty, remaining letters = Subject
+            const mappingHints = {
+                // Mathematics (M faculty)
+                'MMA': ['mathematics advanced', 'advanced mathematics'],
+                'MMS': ['mathematics standard', 'standard mathematics'],
+                // MMX is Year 11 only (Mathematics Extension)
+                'MMX': ['mathematics extension', 'extension mathematics'],
+                'MXX': ['extension 2 mathematics', 'mathematics extension 2'],
+                'MMG': ['general mathematics'],
+                
+                // English (E faculty)
+                'EEN': ['english', 'standard english', 'advanced english'],
+                'EEA': ['advanced english', 'english advanced'],
+                'EES': ['standard english', 'english standard'],
+                // ENX is Year 11 only (English Extension)
+                'ENX': ['english extension', 'extension english'],
+                'EXX': ['extension 2 english', 'english extension 2'],
+                'EEL': ['english esl', 'esl'],
+                'EDR': ['drama'],
+                'DRA': ['drama'], // Alternative if Drama uses D
+                
+                // Science (S faculty)
+                'SPH': ['physics'],
+                'SCH': ['chemistry'],
+                'SBI': ['biology'],
+                'SSC': ['science', 'investigating science'],
+                'SEE': ['earth and environmental science', 'earth environmental'],
+                'SIS': ['investigating science'],
+                'SMA': ['marine studies'],
+                
+                // HSIE (H faculty)
+                'HBS': ['business studies'],
+                'HLS': ['legal studies'],
+                'HAH': ['ancient history'],
+                'HMH': ['modern history', 'history'],
+                'HGE': ['geography'],
+                'HEC': ['economics'],
+                'HSC': ['society and culture'],
+                'HCA': ['community and family studies'],
+                'HWH': ['work education'],
+                
+                // CAPA (C faculty - Creative & Performing Arts)
+                'CVI': ['visual arts', 'art'],
+                'CMU': ['music'],
+                'CDA': ['dance'],
+                'CDR': ['drama'],
+                
+                // TAS (T faculty - Technology & Applied Studies)
+                'TDT': ['design and technology'],
+                'TFT': ['food technology'],
+                'TIT': ['industrial technology'],
+                'TTD': ['textiles and design'],
+                'TSW': ['software design', 'software'],
+                'TIM': ['information processes', 'ipt'],
+                'TAG': ['agriculture'],
+                'TET': ['engineering studies'],
+                
+                // PDHPE (P faculty)
+                'PPE': ['personal development', 'health', 'physical education', 'pdhpe'],
+                'PSP': ['sport lifestyle', 'sports'],
+                
+                // Languages (L faculty)
+                'LFR': ['french'],
+                'LSP': ['spanish'],
+                'LGE': ['german'],
+                'LJP': ['japanese'],
+                'LCH': ['chinese'],
+                'LIT': ['italian'],
+                'LLA': ['latin'],
+                'LIN': ['indonesian'],
+                'LAR': ['arabic'],
+                
+                // VET subjects (V faculty)
+                'VET': ['vocational', 'vet'],
+                'VBU': ['business services'],
+                'VCO': ['construction'],
+                'VEN': ['entertainment'],
+                'VHO': ['hospitality'],
+                'VIT': ['information technology'],
+                'VRE': ['retail'],
+                
+                // Other
+                'REL': ['studies of religion', 'religion'],
+                'SOR': ['studies of religion', 'religion'],
+                'PHO': ['photography']
+            };
+            
+            // Try to auto-map each class
+            uniqueClasses.forEach(className => {
+                let hints = null;
+                const classUpper = className.toUpperCase();
+                
+                // Special handling for Extension courses (only available in Year 11)
+                if ((classUpper === 'MMX' || classUpper === 'ENX') && year10Selected) {
+                    // These courses don't exist in Year 10, skip auto-mapping
+                    return;
+                }
+                
+                // Normal lookup
+                hints = mappingHints[classUpper];
+                
+                if (!hints) return;
+                
+                // Find best matching course
+                let bestMatch = null;
+                let bestScore = 0;
+                
+                courseCodes.forEach(course => {
+                    const courseName = course.name.toLowerCase();
+                    let score = 0;
+                    
+                    // Count how many hint keywords appear in the course name
+                    hints.forEach(hint => {
+                        if (courseName.includes(hint.toLowerCase())) {
+                            score += hint.length; // Longer matches are weighted more
+                        }
+                    });
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMatch = course.number;
+                    }
+                });
+                
+                // If we found a decent match, pre-select it
+                if (bestMatch && bestScore > 0) {
+                    // Store the mapping for when the dropdown is created
+                    if (!window.autoMappings) window.autoMappings = {};
+                    window.autoMappings[className] = bestMatch;
+                }
+            });
+        }
+
+        function rerunAutoMapping() {
+            // Clear previous auto-mappings
+            window.autoMappings = {};
+            
+            // Re-run the auto-mapping with new year level
+            performAutomaticClassMapping();
+            
+            // Update all the dropdowns with new mappings
+            uniqueClasses.forEach(className => {
+                const select = document.getElementById(`mapping_${className}`);
+                if (!select) return;
+                
+                // Reset to default first
+                select.value = '';
+                
+                // Apply new auto-mapping if it exists
+                if (window.autoMappings && window.autoMappings[className]) {
+                    select.value = window.autoMappings[className];
+                }
+            });
+            
+            // Update the info message
+            const container = document.getElementById('mappingContainer');
+            const existingInfo = container.querySelector('.info-box');
+            if (existingInfo) {
+                const autoMappedCount = uniqueClasses.filter(className => {
+                    return window.autoMappings && window.autoMappings[className];
+                }).length;
+                
+                if (autoMappedCount > 0) {
+                    existingInfo.innerHTML = `✓ Automatically pre-selected ${autoMappedCount} of ${uniqueClasses.length} class mappings based on course names. Please review and adjust as needed.`;
+                } else {
+                    existingInfo.remove();
+                }
+            }
+        }
+
         function processStudentData(jsonData) {
             const headers = jsonData[0];
             const students = [];
@@ -804,6 +1021,9 @@
             const container = document.getElementById('mappingContainer');
             container.innerHTML = '';
             
+            // Perform automatic mapping first
+            performAutomaticClassMapping();
+            
             uniqueClasses.forEach(className => {
                 const item = document.createElement('div');
                 item.className = 'mapping-item';
@@ -827,6 +1047,12 @@
                     const option = document.createElement('option');
                     option.value = course.number;
                     option.textContent = `${course.name} (${course.number})`;
+                    
+                    // Check if this should be pre-selected from auto-mapping
+                    if (window.autoMappings && window.autoMappings[className] === course.number) {
+                        option.selected = true;
+                    }
+                    
                     select.appendChild(option);
                 });
                 
@@ -834,6 +1060,19 @@
                 item.appendChild(select);
                 container.appendChild(item);
             });
+            
+            // Count and show auto-mapping results
+            const autoMappedCount = uniqueClasses.filter(className => {
+                return window.autoMappings && window.autoMappings[className];
+            }).length;
+            
+            if (autoMappedCount > 0) {
+                const info = document.createElement('div');
+                info.className = 'info-box';
+                info.style.marginTop = '20px';
+                info.innerHTML = `✓ Automatically pre-selected ${autoMappedCount} of ${uniqueClasses.length} class mappings based on course names. Please review and adjust as needed.`;
+                container.appendChild(info);
+            }
             
             // Enable generate button
             document.getElementById('generateBtn').disabled = false;
