@@ -803,7 +803,7 @@
                 // ENX is Year 11 only (English Extension)
                 'ENX': ['english extension', 'extension english'],
                 'EXX': ['extension 2 english', 'english extension 2'],
-                'ESL': ['english esl', 'esl'],
+                'ESL': ['english EAL/D', 'esl'],
                 'EDR': ['drama'],
                 'ESD': ['english studies'],
                 
@@ -839,18 +839,22 @@
                 'TTX': ['textiles and design'],
                 'TSE': ['software engineering', 'software'],
                 'TIM': ['information processes', 'ipt'],
-                'TAG': ['agriculture'],
-                'TET': ['engineering studies'],
+                'TCO': ['construction'],
+                'TES': ['engineering studies'],
+                'TEC': ['enterprise computing'],
                 
                 // PDHPE (P faculty)
                 'PHS': ['health'],
                 'PSP': ['sport lifestyle', 'sports'],
                 
                 // Languages (L faculty)
-                'LFR': ['french'],
-                'LSP': ['spanish'],
+                'LFB': ['french beginners'],
+                'LFC': ['french continuers'],
+                'LSB': ['spanish beginners'],
+                'LSC': ['spanish continuers'],
                 'LGE': ['german'],
-                'LJP': ['japanese'],
+                'LJB': ['japanese beginners'],
+                'LJC': ['japanese continuers'],
                 'LCH': ['chinese'],
                 'LIT': ['italian'],
                 'LLA': ['latin'],
@@ -1155,7 +1159,7 @@
             XLSX.utils.book_append_sheet(wb, ws, 'Mapped Students');
             
             // Generate file
-            XLSX.writeFile(wb, 'NESA_Mapped_Students.xlsx');
+            XLSX.writeFile(wb, 'NESA_Mapped_Students.csv', { bookType: 'csv' });
             
             // Show completion
             document.getElementById('step4').classList.add('complete');
