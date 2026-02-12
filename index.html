@@ -597,48 +597,6 @@
             
             // Generate matching interface
             generateMatchingInterface();
-                        
-                    } catch (error) {
-                        const status = document.getElementById('courseStatus');
-                        status.className = 'file-status error';
-                        status.textContent = '✗ Error reading file: ' + error.message;
-                    }
-                },
-                error: function(error) {
-                    const status = document.getElementById('courseStatus');
-                    status.className = 'file-status error';
-                    status.textContent = '✗ Error parsing CSV: ' + error.message;
-                }
-            });
-        });
-
-        function performAutomaticMatching() {
-            studentMatching = {};
-            
-            studentData.students.forEach((student, enrolIndex) => {
-                // Parse enrolment name
-                const enrolSurname = student.surname.trim().toLowerCase();
-                const enrolFirstName = student.givenNames.trim().split(/\s+/)[0].toLowerCase(); // Get first word of given names
-                
-                // Try to find match in NESA data
-                const matchIndex = nesaStudents.findIndex(nesaStudent => {
-                    // Parse NESA name (format: "SURNAME, First Name")
-                    const parts = nesaStudent.name.split(',');
-                    if (parts.length !== 2) return false;
-                    
-                    const nesaSurname = parts[0].trim().toLowerCase();
-                    const nesaFirstName = parts[1].trim().split(/\s+/)[0].toLowerCase(); // Get first word
-                    
-                    return nesaSurname === enrolSurname && nesaFirstName === enrolFirstName;
-                });
-                
-                if (matchIndex !== -1) {
-                    studentMatching[enrolIndex] = matchIndex;
-                }
-            });
-            
-            // Generate matching interface
-            generateMatchingInterface();
         }
 
         function generateMatchingInterface() {
