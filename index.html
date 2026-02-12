@@ -975,18 +975,18 @@
                     });
                     
                     let bestMatch = null;
-                    if (potentialMatches.length > 0) {
-                        if (document.getElementById('year10').checked) {
-                            // Prefer 200-hour course for Year 10
-                            const match200 = potentialMatches.find(m => m.course.hours === 200);
-                            if (match200) bestMatch = match200.course.number;
-                            else bestMatch = potentialMatches[0].course.number;
+                    if (document.getElementById('year10').checked) {
+                        // Prefer 200-hour course with highest score
+                        const matches200 = potentialMatches.filter(m => m.course.hours === 200);
+                        if (matches200.length > 0) {
+                            matches200.sort((a,b) => b.score - a.score);
+                            bestMatch = matches200[0].course.number;
                         } else {
-                            // Year 11: highest score
                             potentialMatches.sort((a,b) => b.score - a.score);
                             bestMatch = potentialMatches[0].course.number;
                         }
                     }
+
                     
                     // Store mapping
                     if (bestMatch) {
@@ -1129,10 +1129,11 @@
                         option.value = course.number;
                         
                         let text = `${course.name} (${course.number})`;
-                        if (document.getElementById('year10').checked && course.hours) {
-                            text += ` – ${course.hours} hrs`; // Show hours for Year 10
+                        if (course.hours) {
+                            text += ` – ${course.hours} hrs`; // Always show hours if present
                         }
                         option.textContent = text;
+
                     
                         if (window.autoMappings && window.autoMappings[className] === course.number) {
                             option.selected = true;
