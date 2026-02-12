@@ -1152,20 +1152,22 @@
               
                   // Function to update highlight & live mapping
                   function updateHighlight() {
-                      if (deleteCheckbox.checked) {
-                          item.style.background = '#ffebee'; // Red for deleted
-                          classMapping[className] = '';      // Deleted
-                      } else if (manualInput.value.trim()) {
-                          item.style.background = '#e8f5e9'; // Green for manual entry
-                          classMapping[className] = manualInput.value.trim();
-                      } else if (select.value) {
-                          item.style.background = '#e8f5e9'; // Green for dropdown mapped
-                          classMapping[className] = select.value;
-                      } else {
-                          item.style.background = '#fff3e0'; // Orange for unmapped
-                          classMapping[className] = className;
-                      }
-                  }
+                        if (deleteCheckbox.checked) {
+                            item.style.background = '#ffebee'; // Red for deleted
+                            classMapping[className] = '';      // Deleted
+                        } else if (manualInput.value.trim()) {
+                            item.style.background = '#e8f5e9'; // Green for manual entry
+                            classMapping[className] = manualInput.value.trim();
+                            select.value = ''; // Clear dropdown so it doesn't conflict
+                        } else if (select.value) {
+                            item.style.background = '#e8f5e9'; // Green for dropdown mapped
+                            classMapping[className] = select.value;
+                        } else {
+                            item.style.background = '#fff3e0'; // Orange for unmapped
+                            classMapping[className] = className;
+                        }
+                    }
+
               
                   // Event listeners
                   select.addEventListener('change', () => {
