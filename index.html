@@ -689,6 +689,9 @@
         let studentMatching = {}; // Maps enrolment student index to NESA student index
         let uniqueClasses = [];
         let classMapping = {};
+        let manuallyOverriddenClasses = new Set();
+        let deletedClasses = new Set();
+
 
         // Step 1: Handle student enrolments upload
         document.getElementById('studentFile').addEventListener('change', function(e) {
@@ -1257,170 +1260,226 @@
         function generateMappingInterface() {
             const container = document.getElementById('mappingContainer');
             container.innerHTML = '';
-            
-            // Perform automatic mapping first
+        
+            manuallyOverriddenClasses = new Set();
+            deletedClasses = new Set();
+        
             performAutomaticClassMapping();
-            
+        
             uniqueClasses.forEach(className => {
                 const item = document.createElement('div');
                 item.className = 'mapping-item';
-                
+                item.id = `item_${className}`;
+        
                 const label = document.createElement('div');
                 label.className = 'mapping-label';
                 label.textContent = className;
-                
+        
                 const select = document.createElement('select');
                 select.className = 'mapping-select';
                 select.id = `mapping_${className}`;
-                
-                // Add default option
+        
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
-                defaultOption.textContent = '-- Leave as ' + className + ' (unmapped) --';
+                defaultOption.textContent = '-- Unmapped --';
                 select.appendChild(defaultOption);
-                
-                // Add course options
+        
                 courseCodes.forEach(course => {
                     const option = document.createElement('option');
                     option.value = course.number;
                     option.textContent = `${course.name} (${course.number})`;
-                    
-                    // Check if this should be pre-selected from auto-mapping
                     if (window.autoMappings && window.autoMappings[className] === course.number) {
                         option.selected = true;
                     }
-                    
                     select.appendChild(option);
                 });
-                
+        
+                const deleteWrapper = document.createElement('label');
+                deleteWrapper.style.marginLeft = '15px';
+                deleteWrapper.style.display = 'flex';
+                deleteWrapper.style.alignItems = 'center';
+        
+                const deleteCheckbox = document.createElement('input');
+                deleteCheckbox.type = 'checkbox';
+                deleteCheckbox.id = `delete_${className}`;
+                deleteCheckbox.style.marginRight = '5px';
+        
+                deleteWrapper.appendChild(deleteCheckbox);
+                deleteWrapper.appendChild(document.createTextNode('Delete'));
+        
+                const manualInput = document.createElement('input');
+                manualInput.type = 'text';
+                manualInput.placeholder = 'Manual course code';
+                manualInput.id = `manual_${className}`;
+                manualInput.style.marginLeft = '15px';
+                manualInput.style.padding = '8px';
+                manualInput.style.borderRadius = '6px';
+                manualInput.style.border = '2px solid #ddd';
+                manualInput.style.width = '180px';
+        
+                function updateState() {
+                    if (deleteCheckbox.checked) {
+                        item.style.background = '#ffebee';
+                        deletedClasses.add(className);
+                        manuallyOverriddenClasses.delete(className);
+                        select.value = '';
+                        manualInput.value = '';
+                    } else if (manualInput.value.trim()) {
+                        item.style.background = '#e8f5e9';
+                        manuallyOverriddenClasses.add(className);
+                        deletedClasses.delete(className);
+                        select.value = '';
+                    } else if (select.value) {
+                        item.style.background = '#e8f5e9';
+                        deletedClasses.delete(className);
+                        manuallyOverriddenClasses.delete(className);
+                    } else {
+                        item.style.background = '#fff3e0';
+                        deletedClasses.delete(className);
+                        manuallyOverriddenClasses.delete(className);
+                    }
+                }
+        
+                select.addEventListener('change', updateState);
+                deleteCheckbox.addEventListener('change', updateState);
+                manualInput.addEventListener('input', updateState);
+        
+                updateState();
+        
                 item.appendChild(label);
                 item.appendChild(select);
+                item.appendChild(deleteWrapper);
+                item.appendChild(manualInput);
+        
                 container.appendChild(item);
             });
-            
-            // Count and show auto-mapping results
-            const autoMappedCount = uniqueClasses.filter(className => {
-                return window.autoMappings && window.autoMappings[className];
-            }).length;
-            
-            if (autoMappedCount > 0) {
-                const info = document.createElement('div');
-                info.className = 'info-box';
-                info.style.marginTop = '20px';
-                info.innerHTML = `✓ Automatically pre-selected ${autoMappedCount} of ${uniqueClasses.length} class mappings based on course names. Please review and adjust as needed.`;
-                container.appendChild(info);
-            }
-            
-            // Enable generate button
+        
             document.getElementById('generateBtn').disabled = false;
         }
 
+
         function generateOutput() {
-            // Collect mappings
-            classMapping = {};
-            uniqueClasses.forEach(className => {
-                const select = document.getElementById(`mapping_${className}`);
-                classMapping[className] = select.value || className; // Use original if unmapped
-            });
             
-            // Generate output data
-            const outputData = [];
-            const unmappedClasses = new Set();
-            const unmatchedStudents = [];
+                classMapping = {};
             
-            // Create header row with new columns
-            const headers = [
-                'NESA Student ID',
-                'Student Name (NESA)',
-                'Surname (Enrolment)',
-                'Given Names (Enrolment)',
-                'Student ID (Enrolment)'
-            ];
-            for (let i = 1; i <= studentData.maxClasses; i++) {
-                headers.push(`Class ${i}`);
-            }
-            outputData.push(headers);
+                uniqueClasses.forEach(className => {
+                    const select = document.getElementById(`mapping_${className}`);
+                    const manualInput = document.getElementById(`manual_${className}`);
+                    const deleteCheckbox = document.getElementById(`delete_${className}`);
             
-            // Process each student
-            studentData.students.forEach((student, enrolIndex) => {
-                const row = [];
-                
-                // Check if student is matched to NESA data
-                if (studentMatching.hasOwnProperty(enrolIndex)) {
-                    const nesaStudent = nesaStudents[studentMatching[enrolIndex]];
-                    row.push(nesaStudent.nesaId);
-                    row.push(nesaStudent.name);
-                } else {
-                    // No NESA match
-                    row.push('');
-                    row.push('');
-                    unmatchedStudents.push(`${student.surname}, ${student.givenNames} (ID: ${student.studentId})`);
-                }
-                
-                // Add enrolment data
-                row.push(student.surname);
-                row.push(student.givenNames);
-                row.push(student.studentId);
-                
-                // Map classes to course numbers
-                for (let i = 0; i < studentData.maxClasses; i++) {
-                    if (i < student.classes.length) {
-                        const originalClass = student.classes[i];
-                        const cleanedClass = originalClass.replace(/\d+/g, '');
-                        const mappedValue = classMapping[cleanedClass];
-                        
-                        // Track unmapped classes
-                        if (mappedValue === cleanedClass) {
-                            unmappedClasses.add(cleanedClass);
-                        }
-                        
-                        row.push(mappedValue);
+                    if (deleteCheckbox && deleteCheckbox.checked) {
+                        classMapping[className] = '';
+                    } else if (manualInput && manualInput.value.trim()) {
+                        classMapping[className] = manualInput.value.trim();
+                    } else if (select && select.value) {
+                        classMapping[className] = select.value;
                     } else {
-                        row.push(''); // Empty cell for students with fewer classes
+                        classMapping[className] = className;
                     }
+                });
+            
+                const outputData = [];
+                const unmappedClasses = new Set();
+                const unmatchedStudents = [];
+            
+                const headers = [
+                    'NESA Student ID',
+                    'Student Name (NESA)',
+                    'Surname (Enrolment)',
+                    'Given Names (Enrolment)',
+                    'Student ID (Enrolment)'
+                ];
+            
+                for (let i = 1; i <= studentData.maxClasses; i++) {
+                    headers.push(`Class ${i}`);
                 }
-                
-                outputData.push(row);
-            });
             
-            // Create workbook and download
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(outputData);
-            XLSX.utils.book_append_sheet(wb, ws, 'Mapped Students');
+                outputData.push(headers);
             
-            // Generate file
-            XLSX.writeFile(wb, 'NESA_Mapped_Students.xlsx');
+                studentData.students.forEach((student, enrolIndex) => {
+                    const row = [];
             
-            // Show completion
-            document.getElementById('step4').classList.add('complete');
-            document.getElementById('step5').classList.add('active');
+                    if (studentMatching.hasOwnProperty(enrolIndex)) {
+                        const nesaStudent = nesaStudents[studentMatching[enrolIndex]];
+                        row.push(nesaStudent.nesaId);
+                        row.push(nesaStudent.name);
+                    } else {
+                        row.push('');
+                        row.push('');
+                        unmatchedStudents.push(`${student.surname}, ${student.givenNames}`);
+                    }
             
-            const outputContainer = document.getElementById('outputContainer');
-            let message = '<div class="info-box">✓ Output file generated and downloaded successfully!</div>';
+                    row.push(student.surname);
+                    row.push(student.givenNames);
+                    row.push(student.studentId);
             
-            // Show unmatched students warning
-            if (unmatchedStudents.length > 0) {
-                message += '<div class="unmapped-list"><h4>⚠️ Unmatched Students</h4>';
-                message += '<p>The following students from the enrolment file were not matched to NESA data:</p><ul>';
-                unmatchedStudents.forEach(studentName => {
-                    message += `<li>${studentName}</li>`;
+                    for (let i = 0; i < studentData.maxClasses; i++) {
+                        if (i < student.classes.length) {
+                            const originalClass = student.classes[i];
+                            const cleanedClass = originalClass.replace(/\d+/g, '');
+                            const mappedValue = classMapping[cleanedClass];
+            
+                            if (!mappedValue) {
+                                row.push('');
+                            } else {
+                                row.push(mappedValue);
+                                if (mappedValue === cleanedClass) {
+                                    unmappedClasses.add(cleanedClass);
+                                }
+                            }
+                        } else {
+                            row.push('');
+                        }
+                    }
+            
+                    outputData.push(row);
                 });
-                message += '</ul></div>';
-            }
             
-            // Show unmapped classes warning
-            if (unmappedClasses.size > 0) {
-                message += '<div class="unmapped-list"><h4>⚠️ Unmapped Classes</h4>';
-                message += '<p>The following classes were not mapped and retained their original names:</p><ul>';
-                Array.from(unmappedClasses).forEach(className => {
-                    message += `<li>${className}</li>`;
-                });
-                message += '</ul></div>';
-            }
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(outputData);
+                XLSX.utils.book_append_sheet(wb, ws, 'Mapped Students');
             
-            message += '<button onclick="location.reload()">Start New Mapping</button>';
-            outputContainer.innerHTML = message;
-        }
+                XLSX.writeFile(wb, 'NESA_Mapped_Students.csv', { bookType: 'csv' });
+            
+                document.getElementById('step4').classList.add('complete');
+                document.getElementById('step5').classList.add('active');
+            
+                const outputContainer = document.getElementById('outputContainer');
+            
+                let message = '<div class="info-box">✓ Output CSV generated successfully!</div>';
+            
+                if (unmatchedStudents.length > 0) {
+                    message += '<div class="unmapped-list"><h4>⚠️ Unmatched Students</h4><ul>';
+                    unmatchedStudents.forEach(s => message += `<li>${s}</li>`);
+                    message += '</ul></div>';
+                }
+            
+                if (unmappedClasses.size > 0) {
+                    message += '<div class="unmapped-list"><h4>⚠️ Unmapped Classes</h4><ul>';
+                    Array.from(unmappedClasses).forEach(c => message += `<li>${c}</li>`);
+                    message += '</ul></div>';
+                }
+            
+                if (manuallyOverriddenClasses.size > 0) {
+                    message += '<div class="unmapped-list"><h4>✏️ Manually Overridden Classes</h4><ul>';
+                    Array.from(manuallyOverriddenClasses).forEach(c => {
+                        message += `<li>${c} → ${classMapping[c]}</li>`;
+                    });
+                    message += '</ul></div>';
+                }
+            
+                if (deletedClasses.size > 0) {
+                    message += '<div class="unmapped-list"><h4>🗑 Deleted Classes</h4><ul>';
+                    Array.from(deletedClasses).forEach(c => {
+                        message += `<li>${c}</li>`;
+                    });
+                    message += '</ul></div>';
+                }
+            
+                message += '<button onclick="location.reload()">Start New Mapping</button>';
+                outputContainer.innerHTML = message;
+            }
+
     </script>
 </body>
 </html>
