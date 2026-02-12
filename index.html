@@ -900,9 +900,9 @@
                     
                     // Count how many hint keywords appear in the course name
                     hints.forEach(hint => {
-                        if (courseName.includes(hint.toLowerCase())) {
-                            score += hint.length; // Longer matches are weighted more
-                        }
+                        if (courseName.includes('life skills')) {
+                                score -= 1000; // Strong penalty
+                            }
                     });
                     
                     if (score > bestScore) {
