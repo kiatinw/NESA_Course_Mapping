@@ -985,12 +985,19 @@
                         bestMatch = potentialMatches[0].course.number;
                     }
                 } else {
-                    // Year 11: ignore hours, just pick highest score
-                    if (potentialMatches.length > 0) {
-                        potentialMatches.sort((a,b) => b.score - a.score);
-                        bestMatch = potentialMatches[0].course.number;
-                    }
-                }
+    // Year 11: prefer non-Life Skills courses
+    const nonLifeSkills = potentialMatches.filter(m => !m.course.name.toLowerCase().includes('life skills'));
+    
+    if (nonLifeSkills.length > 0) {
+        nonLifeSkills.sort((a,b) => b.score - a.score);
+        bestMatch = nonLifeSkills[0].course.number;
+    } else if (potentialMatches.length > 0) {
+        // fallback to Life Skills if no other match
+        potentialMatches.sort((a,b) => b.score - a.score);
+        bestMatch = potentialMatches[0].course.number;
+    }
+}
+
                 
                 // Store mapping
                 if (bestMatch) {
