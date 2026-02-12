@@ -585,11 +585,13 @@
                 complete: function(results) {
                     try {
                         courseCodes = results.data
-                            .filter(row => row['Course Number'] && row['Course Name'])
-                            .map(row => ({
-                                number: row['Course Number'].trim(),
-                                name: row['Course Name'].trim()
-                            }));
+                                .filter(row => row['Course Number'] && row['Course Name'])
+                                .map(row => ({
+                                    number: row['Course Number'].trim(),
+                                    name: row['Course Name'].trim(),
+                                    hours: row['Hours'] ? parseInt(row['Hours'].trim()) : null
+                                }));
+
                         
                         const status = document.getElementById('courseStatus');
                         status.className = 'file-status success';
@@ -960,30 +962,38 @@
                 if (!hints) return;
                 
                 // Find best matching course
-                let bestMatch = null;
-                let bestScore = 0;
-                
-                courseCodes.forEach(course => {
-                    const courseName = course.name.toLowerCase();
-                    let score = 0;
-                
-                    // Positive scoring for hint matches
-                    hints.forEach(hint => {
-                        if (courseName.includes(hint.toLowerCase())) {
-                            score += hint.length;
-                        }
+                let potentialMatches = [];
+
+                    // Collect all courses that match at least one hint
+                    courseCodes.forEach(course => {
+                        const courseName = course.name.toLowerCase();
+                        let score = 0;
+                        hints.forEach(hint => {
+                            if (courseName.includes(hint.toLowerCase())) score += hint.length;
+                        });
+                        if (score > 0) potentialMatches.push({ course, score });
                     });
-                
-                    // Strong penalty for Life Skills
-                    if (courseName.includes('life skills')) {
-                        score -= 1000;
+                    
+                    let bestMatch = null;
+                    if (potentialMatches.length > 0) {
+                        if (document.getElementById('year10').checked) {
+                            // Prefer 200-hour course for Year 10
+                            const match200 = potentialMatches.find(m => m.course.hours === 200);
+                            if (match200) bestMatch = match200.course.number;
+                            else bestMatch = potentialMatches[0].course.number;
+                        } else {
+                            // Year 11: highest score
+                            potentialMatches.sort((a,b) => b.score - a.score);
+                            bestMatch = potentialMatches[0].course.number;
+                        }
                     }
-                
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMatch = course.number;
+                    
+                    // Store mapping
+                    if (bestMatch) {
+                        if (!window.autoMappings) window.autoMappings = {};
+                        window.autoMappings[className] = bestMatch;
                     }
-                });
+
                 
                 // If we found a decent match, pre-select it
                 if (bestMatch && bestScore > 0) {
@@ -1121,14 +1131,21 @@
                   select.appendChild(defaultOption);
               
                   courseCodes.forEach(course => {
-                      const option = document.createElement('option');
-                      option.value = course.number;
-                      option.textContent = `${course.name} (${course.number})`;
-                      if (window.autoMappings && window.autoMappings[className] === course.number) {
-                          option.selected = true;
-                      }
-                      select.appendChild(option);
-                  });
+                        const option = document.createElement('option');
+                        option.value = course.number;
+                        
+                        let text = `${course.name} (${course.number})`;
+                        if (document.getElementById('year10').checked && course.hours) {
+                            text += ` – ${course.hours} hrs`; // Show hours for Year 10
+                        }
+                        option.textContent = text;
+                    
+                        if (window.autoMappings && window.autoMappings[className] === course.number) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+
               
                   // Delete checkbox
                   const deleteWrapper = document.createElement('label');
