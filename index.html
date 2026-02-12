@@ -1032,58 +1032,101 @@
             performAutomaticClassMapping();
             
             uniqueClasses.forEach(className => {
-                const item = document.createElement('div');
-                item.className = 'mapping-item';
-                
-                const label = document.createElement('div');
-                label.className = 'mapping-label';
-                label.textContent = className;
-                
-                const select = document.createElement('select');
-                select.className = 'mapping-select';
-                select.id = `mapping_${className}`;
-                
-                // Add default option
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = '-- Leave as ' + className + ' (unmapped) --';
-                select.appendChild(defaultOption);
-                
-                // Add course options
-                courseCodes.forEach(course => {
-                    const option = document.createElement('option');
-                    option.value = course.number;
-                    option.textContent = `${course.name} (${course.number})`;
-                    
-                    // Check if this should be pre-selected from auto-mapping
-                    if (window.autoMappings && window.autoMappings[className] === course.number) {
-                        option.selected = true;
-                    }
-                    
-                    select.appendChild(option);
-                });
-                
-                const deleteWrapper = document.createElement('label');
-                deleteWrapper.style.display = 'flex';
-                deleteWrapper.style.alignItems = 'center';
-                deleteWrapper.style.gap = '6px';
-                deleteWrapper.style.marginLeft = '15px';
-                deleteWrapper.style.fontSize = '13px';
-                deleteWrapper.style.cursor = 'pointer';
-                
-                const deleteCheckbox = document.createElement('input');
-                deleteCheckbox.type = 'checkbox';
-                deleteCheckbox.id = `delete_${className}`;
-                
-                deleteWrapper.appendChild(deleteCheckbox);
-                deleteWrapper.appendChild(document.createTextNode('Delete'));
-                
-                item.appendChild(label);
-                item.appendChild(select);
-                item.appendChild(deleteWrapper);
-                container.appendChild(item);
+                  const item = document.createElement('div');
+                  item.className = 'mapping-item';
+                  item.style.display = 'flex';
+                  item.style.alignItems = 'center';
+                  item.style.gap = '12px';
+              
+                  // Label
+                  const label = document.createElement('div');
+                  label.className = 'mapping-label';
+                  label.textContent = className;
+              
+                  // Dropdown
+                  const select = document.createElement('select');
+                  select.className = 'mapping-select';
+                  select.id = `mapping_${className}`;
+              
+                  const defaultOption = document.createElement('option');
+                  defaultOption.value = '';
+                  defaultOption.textContent = '-- Leave as ' + className + ' (unmapped) --';
+                  select.appendChild(defaultOption);
+              
+                  courseCodes.forEach(course => {
+                      const option = document.createElement('option');
+                      option.value = course.number;
+                      option.textContent = `${course.name} (${course.number})`;
+                      if (window.autoMappings && window.autoMappings[className] === course.number) {
+                          option.selected = true;
+                      }
+                      select.appendChild(option);
+                  });
+              
+                  // Delete checkbox
+                  const deleteWrapper = document.createElement('label');
+                  deleteWrapper.style.display = 'flex';
+                  deleteWrapper.style.alignItems = 'center';
+                  deleteWrapper.style.gap = '6px';
+                  deleteWrapper.style.fontSize = '13px';
+                  deleteWrapper.style.cursor = 'pointer';
+              
+                  const deleteCheckbox = document.createElement('input');
+                  deleteCheckbox.type = 'checkbox';
+                  deleteCheckbox.id = `delete_${className}`;
+                  deleteWrapper.appendChild(deleteCheckbox);
+                  deleteWrapper.appendChild(document.createTextNode('Delete'));
+              
+                  // Manual course code input
+                  const manualInput = document.createElement('input');
+                  manualInput.type = 'text';
+                  manualInput.id = `manual_${className}`;
+                  manualInput.placeholder = 'Enter course code manually';
+                  manualInput.style.padding = '6px';
+                  manualInput.style.border = '2px solid #ddd';
+                  manualInput.style.borderRadius = '6px';
+                  manualInput.style.width = '140px';
+              
+                  // Function to update highlight & live mapping
+                  function updateHighlight() {
+                      if (deleteCheckbox.checked) {
+                          item.style.background = '#ffebee'; // Red for deleted
+                          classMapping[className] = '';      // Deleted
+                      } else if (manualInput.value.trim()) {
+                          item.style.background = '#e8f5e9'; // Green for manual entry
+                          classMapping[className] = manualInput.value.trim();
+                      } else if (select.value) {
+                          item.style.background = '#e8f5e9'; // Green for dropdown mapped
+                          classMapping[className] = select.value;
+                      } else {
+                          item.style.background = '#fff3e0'; // Orange for unmapped
+                          classMapping[className] = className;
+                      }
+                  }
+              
+                  // Event listeners
+                  select.addEventListener('change', () => {
+                      if (select.value) manualInput.value = '';
+                      updateHighlight();
+                  });
+                  deleteCheckbox.addEventListener('change', () => {
+                      if (deleteCheckbox.checked) manualInput.value = '';
+                      updateHighlight();
+                  });
+                  manualInput.addEventListener('input', () => {
+                      if (manualInput.value.trim()) select.value = '';
+                      updateHighlight();
+                  });
+              
+                  updateHighlight(); // Initial highlight & live mapping
+              
+                  item.appendChild(label);
+                  item.appendChild(select);
+                  item.appendChild(deleteWrapper);
+                  item.appendChild(manualInput);
+                  container.appendChild(item);
+              });
 
-            });
             
             // Count and show auto-mapping results
             const autoMappedCount = uniqueClasses.filter(className => {
