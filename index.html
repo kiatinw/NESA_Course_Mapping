@@ -1057,21 +1057,20 @@
             return { students, maxClasses: 12 };
         }
 
-        function extractUniqueClasses(studentData) {
-            const classSet = new Set();
-            
-            studentData.students.forEach(student => {
-                student.classes.forEach(className => {
-                    // Remove numbers to get unique class code
-                    const cleanedClass = className.replace(/\d+/g, '');
-                    if (cleanedClass) {
+            function extractUniqueClasses(studentData) {
+                const classSet = new Set();
+                
+                studentData.students.forEach(student => {
+                    student.classes.forEach(className => {
+                        // Take characters 3, 4, 5 (zero-based index 2,3,4)
+                        const cleanedClass = className.length >= 5 ? className.substring(2, 5).toUpperCase() : className.toUpperCase();
                         classSet.add(cleanedClass);
-                    }
+                    });
                 });
-            });
-            
-            return Array.from(classSet).sort();
-        }
+                
+                return Array.from(classSet).sort();
+            }
+
 
         function generateMappingInterface() {
             const container = document.getElementById('mappingContainer');
