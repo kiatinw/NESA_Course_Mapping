@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ g<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -795,27 +795,25 @@
                 // MMX is Year 11 only (Mathematics Extension)
                 'MMX': ['mathematics extension', 'extension mathematics'],
                 'MXX': ['extension 2 mathematics', 'mathematics extension 2'],
-                'MMG': ['general mathematics'],
                 
                 // English (E faculty)
                 'EEN': ['english', 'standard english', 'advanced english'],
-                'EEA': ['advanced english', 'english advanced'],
-                'EES': ['standard english', 'english standard'],
+                'ENA': ['advanced english', 'english advanced'],
+                'ENS': ['standard english', 'english standard'],
                 // ENX is Year 11 only (English Extension)
                 'ENX': ['english extension', 'extension english'],
                 'EXX': ['extension 2 english', 'english extension 2'],
-                'EEL': ['english esl', 'esl'],
+                'ESL': ['english esl', 'esl'],
                 'EDR': ['drama'],
-                'DRA': ['drama'], // Alternative if Drama uses D
+                'ESD': ['english studies'],
                 
                 // Science (S faculty)
                 'SPH': ['physics'],
                 'SCH': ['chemistry'],
                 'SBI': ['biology'],
-                'SSC': ['science', 'investigating science'],
+                'SSC': ['investigating science'],
                 'SEE': ['earth and environmental science', 'earth environmental'],
                 'SIS': ['investigating science'],
-                'SMA': ['marine studies'],
                 
                 // HSIE (H faculty)
                 'HBS': ['business studies'],
@@ -825,27 +823,27 @@
                 'HGE': ['geography'],
                 'HEC': ['economics'],
                 'HSC': ['society and culture'],
-                'HCA': ['community and family studies'],
-                'HWH': ['work education'],
+                'PCF': ['community and family studies'],
+                'HWS': ['work studies'],
                 
                 // CAPA (C faculty - Creative & Performing Arts)
-                'CVI': ['visual arts', 'art'],
+                'CVA': ['visual arts', 'art'],
                 'CMU': ['music'],
-                'CDA': ['dance'],
+                'PDA': ['dance'],
                 'CDR': ['drama'],
                 
                 // TAS (T faculty - Technology & Applied Studies)
                 'TDT': ['design and technology'],
                 'TFT': ['food technology'],
-                'TIT': ['industrial technology'],
-                'TTD': ['textiles and design'],
-                'TSW': ['software design', 'software'],
+                'TMM': ['multimedia'],
+                'TTX': ['textiles and design'],
+                'TSE': ['software engineering', 'software'],
                 'TIM': ['information processes', 'ipt'],
                 'TAG': ['agriculture'],
                 'TET': ['engineering studies'],
                 
                 // PDHPE (P faculty)
-                'PPE': ['personal development', 'health', 'physical education', 'pdhpe'],
+                'PHS': ['health'],
                 'PSP': ['sport lifestyle', 'sports'],
                 
                 // Languages (L faculty)
@@ -897,14 +895,19 @@
                 courseCodes.forEach(course => {
                     const courseName = course.name.toLowerCase();
                     let score = 0;
-                    
-                    // Count how many hint keywords appear in the course name
+                
+                    // Positive scoring for hint matches
                     hints.forEach(hint => {
-                        if (courseName.includes('life skills')) {
-                                score -= 1000; // Strong penalty
-                            }
+                        if (courseName.includes(hint.toLowerCase())) {
+                            score += hint.length;
+                        }
                     });
-                    
+                
+                    // Strong penalty for Life Skills
+                    if (courseName.includes('life skills')) {
+                        score -= 1000;
+                    }
+                
                     if (score > bestScore) {
                         bestScore = score;
                         bestMatch = course.number;
