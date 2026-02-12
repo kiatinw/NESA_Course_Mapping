@@ -679,6 +679,37 @@
                 
                 <div id="outputContainer"></div>
             </div>
+
+            <div class="footer">
+                <div class="footer-content">
+                    <span class="last-updated">Last Updated:</span> 
+                    <span id="lastCommit">Loading...</span> | 
+                    Version 1.0
+                </div>
+            </div>
+            
+            <script>
+                // Fetch last commit date from GitHub
+                fetch('https://api.github.com/repos/YOUR-USERNAME/nesa-mapping-tool/commits/main')
+                    .then(response => response.json())
+                    .then(data => {
+                        const commitDate = new Date(data.commit.author.date);
+                        const options = { 
+                            day: 'numeric', 
+                            month: 'long', 
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true,
+                            timeZone: 'Australia/Sydney'
+                        };
+                        document.getElementById('lastCommit').textContent = 
+                            commitDate.toLocaleString('en-AU', options);
+                    })
+                    .catch(error => {
+                        document.getElementById('lastCommit').textContent = '14 February 2025';
+                    });
+            </script>
         </div>
     </div>
 
