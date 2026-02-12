@@ -961,41 +961,44 @@
                 
                 if (!hints) return;
                 
-                // Find best matching course
+                // Find potential matches
                 let potentialMatches = [];
-
-                    // Collect all courses that match at least one hint
-                    courseCodes.forEach(course => {
-                        const courseName = course.name.toLowerCase();
-                        let score = 0;
-                        hints.forEach(hint => {
-                            if (courseName.includes(hint.toLowerCase())) score += hint.length;
-                        });
-                        if (score > 0) potentialMatches.push({ course, score });
+                courseCodes.forEach(course => {
+                    const courseName = course.name.toLowerCase();
+                    let score = 0;
+                    hints.forEach(hint => {
+                        if (courseName.includes(hint.toLowerCase())) score += hint.length;
                     });
-                    
-                    let bestMatch = null;
-                    if (document.getElementById('year10').checked) {
-                        // Prefer 200-hour course with highest score
-                        const matches200 = potentialMatches.filter(m => m.course.hours === 200);
-                        if (matches200.length > 0) {
-                            matches200.sort((a,b) => b.score - a.score);
-                            bestMatch = matches200[0].course.number;
-                        } else {
-                            potentialMatches.sort((a,b) => b.score - a.score);
-                            bestMatch = potentialMatches[0].course.number;
-                        }
-                    }
-
-                    
-                    // Store mapping
-                    if (bestMatch) {
-                        if (!window.autoMappings) window.autoMappings = {};
-                        window.autoMappings[className] = bestMatch;
-                    }
-
+                    if (score > 0) potentialMatches.push({ course, score });
+                });
+                
+                let bestMatch = null;
             
+                if (year10Selected) {
+                    // Year 10: prefer 200-hour courses
+                    const matches200 = potentialMatches.filter(m => m.course.hours === 200);
+                    if (matches200.length > 0) {
+                        matches200.sort((a,b) => b.score - a.score);
+                        bestMatch = matches200[0].course.number;
+                    } else if (potentialMatches.length > 0) {
+                        potentialMatches.sort((a,b) => b.score - a.score);
+                        bestMatch = potentialMatches[0].course.number;
+                    }
+                } else {
+                    // Year 11: ignore hours, just pick highest score
+                    if (potentialMatches.length > 0) {
+                        potentialMatches.sort((a,b) => b.score - a.score);
+                        bestMatch = potentialMatches[0].course.number;
+                    }
+                }
+                
+                // Store mapping
+                if (bestMatch) {
+                    if (!window.autoMappings) window.autoMappings = {};
+                    window.autoMappings[className] = bestMatch;
+                }
             });
+
         }
 
         function rerunAutoMapping() {
