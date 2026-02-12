@@ -1063,9 +1063,26 @@
                     select.appendChild(option);
                 });
                 
+                const deleteWrapper = document.createElement('label');
+                deleteWrapper.style.display = 'flex';
+                deleteWrapper.style.alignItems = 'center';
+                deleteWrapper.style.gap = '6px';
+                deleteWrapper.style.marginLeft = '15px';
+                deleteWrapper.style.fontSize = '13px';
+                deleteWrapper.style.cursor = 'pointer';
+                
+                const deleteCheckbox = document.createElement('input');
+                deleteCheckbox.type = 'checkbox';
+                deleteCheckbox.id = `delete_${className}`;
+                
+                deleteWrapper.appendChild(deleteCheckbox);
+                deleteWrapper.appendChild(document.createTextNode('Delete'));
+                
                 item.appendChild(label);
                 item.appendChild(select);
+                item.appendChild(deleteWrapper);
                 container.appendChild(item);
+
             });
             
             // Count and show auto-mapping results
@@ -1088,6 +1105,15 @@
         function generateOutput() {
             // Collect mappings
             classMapping = {};
+         const deletedClasses = new Set();
+            
+            uniqueClasses.forEach(className => {
+                const deleteCheckbox = document.getElementById(`delete_${className}`);
+                if (deleteCheckbox && deleteCheckbox.checked) {
+                    deletedClasses.add(className);
+                }
+            });
+
             uniqueClasses.forEach(className => {
                 const select = document.getElementById(`mapping_${className}`);
                 classMapping[className] = select.value || className; // Use original if unmapped
@@ -1137,7 +1163,15 @@
                     if (i < student.classes.length) {
                         const originalClass = student.classes[i];
                         const cleanedClass = originalClass.replace(/\d+/g, '');
-                        const mappedValue = classMapping[cleanedClass];
+                        let mappedValue = '';
+                           
+                           if (!deletedClasses.has(cleanedClass)) {
+                               mappedValue = classMapping[cleanedClass];
+                               if (mappedValue === cleanedClass) {
+                                   unmappedClasses.add(cleanedClass);
+                               }
+                           }
+
                         
                         // Track unmapped classes
                         if (mappedValue === cleanedClass) {
