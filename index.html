@@ -1022,143 +1022,160 @@
         }
 
         function performAutomaticClassMapping() {
-            // Get selected year level
-            const year10Selected = document.getElementById('year10').checked;
-            const year11Selected = document.getElementById('year11').checked;
             
-            // School-specific subject codes and their NESA course keywords
-            // Pattern: First letter = Faculty, remaining letters = Subject
-            const mappingHints = {
-                // Mathematics (M faculty)
-                'MMA': ['mathematics advanced', 'advanced mathematics'],
-                'MMS': ['mathematics standard', 'standard mathematics'],
-                // MMX is Year 11 only (Mathematics Extension)
-                'MMX': ['mathematics extension', 'extension mathematics'],
-                'MXX': ['extension 2 mathematics', 'mathematics extension 2'],
-                'MMG': ['general mathematics'],
-                
-                // English (E faculty)
-                'EEN': ['english', 'standard english', 'advanced english'],
-                'EEA': ['advanced english', 'english advanced'],
-                'EES': ['standard english', 'english standard'],
-                // ENX is Year 11 only (English Extension)
-                'ENX': ['english extension', 'extension english'],
-                'EXX': ['extension 2 english', 'english extension 2'],
-                'EEL': ['english esl', 'esl'],
-                'EDR': ['drama'],
-                'DRA': ['drama'], // Alternative if Drama uses D
-                
-                // Science (S faculty)
-                'SPH': ['physics'],
-                'SCH': ['chemistry'],
-                'SBI': ['biology'],
-                'SSC': ['science', 'investigating science'],
-                'SEE': ['earth and environmental science', 'earth environmental'],
-                'SIS': ['investigating science'],
-                'SMA': ['marine studies'],
-                
-                // HSIE (H faculty)
-                'HBS': ['business studies'],
-                'HLS': ['legal studies'],
-                'HAH': ['ancient history'],
-                'HMH': ['modern history', 'history'],
-                'HGE': ['geography'],
-                'HEC': ['economics'],
-                'HSC': ['society and culture'],
-                'HCA': ['community and family studies'],
-                'HWH': ['work education'],
-                
-                // CAPA (C faculty - Creative & Performing Arts)
-                'CVI': ['visual arts', 'art'],
-                'CMU': ['music'],
-                'CDA': ['dance'],
-                'CDR': ['drama'],
-                
-                // TAS (T faculty - Technology & Applied Studies)
-                'TDT': ['design and technology'],
-                'TFT': ['food technology'],
-                'TIT': ['industrial technology'],
-                'TTD': ['textiles and design'],
-                'TSW': ['software design', 'software'],
-                'TIM': ['information processes', 'ipt'],
-                'TAG': ['agriculture'],
-                'TET': ['engineering studies'],
-                
-                // PDHPE (P faculty)
-                'PPE': ['personal development', 'health', 'physical education', 'pdhpe'],
-                'PSP': ['sport lifestyle', 'sports'],
-                
-                // Languages (L faculty)
-                'LFR': ['french'],
-                'LSP': ['spanish'],
-                'LGE': ['german'],
-                'LJP': ['japanese'],
-                'LCH': ['chinese'],
-                'LIT': ['italian'],
-                'LLA': ['latin'],
-                'LIN': ['indonesian'],
-                'LAR': ['arabic'],
-                
-                // VET subjects (V faculty)
-                'VET': ['vocational', 'vet'],
-                'VBU': ['business services'],
-                'VCO': ['construction'],
-                'VEN': ['entertainment'],
-                'VHO': ['hospitality'],
-                'VIT': ['information technology'],
-                'VRE': ['retail'],
-                
-                // Other
-                'REL': ['studies of religion', 'religion'],
-                'SOR': ['studies of religion', 'religion'],
-                'PHO': ['photography']
-            };
+                const year10Selected = document.getElementById('year10').checked;
+                const year11Selected = document.getElementById('year11').checked;
             
-            // Try to auto-map each class
-            uniqueClasses.forEach(className => {
-                let hints = null;
-                const classUpper = className.toUpperCase();
-                
-                // Special handling for Extension courses (only available in Year 11)
-                if ((classUpper === 'MMX' || classUpper === 'ENX') && year10Selected) {
-                    // These courses don't exist in Year 10, skip auto-mapping
-                    return;
-                }
-                
-                // Normal lookup
-                hints = mappingHints[classUpper];
-                
-                if (!hints) return;
-                
-                // Find best matching course
-                let bestMatch = null;
-                let bestScore = 0;
-                
-                courseCodes.forEach(course => {
-                    const courseName = course.name.toLowerCase();
-                    let score = 0;
-                    
-                    // Count how many hint keywords appear in the course name
-                    hints.forEach(hint => {
-                        if (courseName.includes(hint.toLowerCase())) {
-                            score += hint.length; // Longer matches are weighted more
+                const mappingHints = {
+                    'MMA': ['mathematics advanced', 'advanced mathematics'],
+                    'MMS': ['mathematics standard', 'standard mathematics'],
+                    'MMX': ['mathematics extension', 'extension mathematics'],
+                    'MXX': ['extension 2 mathematics', 'mathematics extension 2'],
+                    'MMG': ['general mathematics'],
+            
+                    'EEN': ['english', 'standard english', 'advanced english'],
+                    'EEA': ['advanced english', 'english advanced'],
+                    'EES': ['standard english', 'english standard'],
+                    'ENX': ['english extension', 'extension english'],
+                    'EXX': ['extension 2 english', 'english extension 2'],
+                    'EEL': ['english esl', 'esl'],
+                    'EDR': ['drama'],
+                    'DRA': ['drama'],
+            
+                    'SPH': ['physics'],
+                    'SCH': ['chemistry'],
+                    'SBI': ['biology'],
+                    'SSC': ['science', 'investigating science'],
+                    'SEE': ['earth and environmental science', 'earth environmental'],
+                    'SIS': ['investigating science'],
+                    'SMA': ['marine studies'],
+            
+                    'HBS': ['business studies'],
+                    'HLS': ['legal studies'],
+                    'HAH': ['ancient history'],
+                    'HMH': ['modern history', 'history'],
+                    'HGE': ['geography'],
+                    'HEC': ['economics'],
+                    'HSC': ['society and culture'],
+                    'HCA': ['community and family studies'],
+                    'HWH': ['work education'],
+            
+                    'CVI': ['visual arts', 'art'],
+                    'CMU': ['music'],
+                    'CDA': ['dance'],
+                    'CDR': ['drama'],
+            
+                    'TDT': ['design and technology'],
+                    'TFT': ['food technology'],
+                    'TIT': ['industrial technology'],
+                    'TTD': ['textiles and design'],
+                    'TSW': ['software design', 'software'],
+                    'TIM': ['information processes', 'ipt'],
+                    'TAG': ['agriculture'],
+                    'TET': ['engineering studies'],
+            
+                    'PPE': ['personal development', 'health', 'physical education', 'pdhpe'],
+                    'PSP': ['sport lifestyle', 'sports'],
+            
+                    'LFR': ['french'],
+                    'LSP': ['spanish'],
+                    'LGE': ['german'],
+                    'LJP': ['japanese'],
+                    'LCH': ['chinese'],
+                    'LIT': ['italian'],
+                    'LLA': ['latin'],
+                    'LIN': ['indonesian'],
+                    'LAR': ['arabic'],
+            
+                    'VET': ['vocational', 'vet'],
+                    'VBU': ['business services'],
+                    'VCO': ['construction'],
+                    'VEN': ['entertainment'],
+                    'VHO': ['hospitality'],
+                    'VIT': ['information technology'],
+                    'VRE': ['retail'],
+            
+                    'REL': ['studies of religion', 'religion'],
+                    'SOR': ['studies of religion', 'religion'],
+                    'PHO': ['photography']
+                };
+            
+                window.autoMappings = {};
+            
+                uniqueClasses.forEach(className => {
+            
+                    const classUpper = className.toUpperCase();
+            
+                    if ((classUpper === 'MMX' || classUpper === 'ENX') && year10Selected) {
+                        return;
+                    }
+            
+                    const hints = mappingHints[classUpper];
+                    if (!hints) return;
+            
+                    let potentialMatches = [];
+            
+                    courseCodes.forEach(course => {
+                        const courseName = course.name.toLowerCase();
+                        let score = 0;
+            
+                        hints.forEach(hint => {
+                            if (courseName.includes(hint.toLowerCase())) {
+                                score += hint.length;
+                            }
+                        });
+            
+                        if (score > 0) {
+                            potentialMatches.push({
+                                course: course,
+                                score: score
+                            });
                         }
                     });
-                    
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMatch = course.number;
+            
+                    if (potentialMatches.length === 0) return;
+            
+                    let bestMatch = null;
+            
+                    // YEAR 10: Prefer 200-hour
+                    if (year10Selected) {
+            
+                        const matches200 = potentialMatches.filter(m =>
+                            parseInt(m.course.hours) === 200
+                        );
+            
+                        const pool = matches200.length > 0 ? matches200 : potentialMatches;
+            
+                        pool.sort((a, b) => b.score - a.score);
+                        bestMatch = pool[0].course.number;
+                    }
+            
+                    // YEAR 11: Prefer non-Life Skills
+                    else if (year11Selected) {
+            
+                        const nonLifeSkills = potentialMatches.filter(m =>
+                            !m.course.name.toLowerCase().includes('life skills')
+                        );
+            
+                        const lifeSkills = potentialMatches.filter(m =>
+                            m.course.name.toLowerCase().includes('life skills')
+                        );
+            
+                        if (nonLifeSkills.length > 0) {
+                            nonLifeSkills.sort((a, b) => b.score - a.score);
+                            bestMatch = nonLifeSkills[0].course.number;
+                        } else {
+                            lifeSkills.sort((a, b) => b.score - a.score);
+                            bestMatch = lifeSkills[0].course.number;
+                        }
+                    }
+            
+                    if (bestMatch) {
+                        window.autoMappings[className] = bestMatch;
                     }
                 });
-                
-                // If we found a decent match, pre-select it
-                if (bestMatch && bestScore > 0) {
-                    // Store the mapping for when the dropdown is created
-                    if (!window.autoMappings) window.autoMappings = {};
-                    window.autoMappings[className] = bestMatch;
-                }
-            });
-        }
+            }
+
 
         function rerunAutoMapping() {
             // Clear previous auto-mappings
