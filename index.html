@@ -1,4 +1,4 @@
- g<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -368,17 +368,32 @@
         <div class="content">
             <!-- STEP 1: Upload Student Enrolments -->
             <div class="step active" id="step1">
-                <div class="step-header">
-                    <div class="step-number">1</div>
-                    <div class="step-title">Upload Student Enrolments</div>
-                </div>
-                <div class="file-upload">
-                    <label for="studentFile">Select student enrolments file (.xls or .xlsx):</label>
-                    <input type="file" id="studentFile" accept=".xls,.xlsx" />
-                    <div class="file-status" id="studentStatus"></div>
-                </div>
-                <div class="progress-info" id="studentProgress"></div>
-            </div>
+                  <div class="step-header">
+                      <div class="step-number">1</div>
+                      <div class="step-title">Upload Student Attendance Spreadsheet</div>
+                  </div>
+              
+                 <ul class="step-instructions">
+                     <li>Go to the <b>Profiles</b> module on Sentral.</li>
+                     <li>Select <b>Exports</b> in the menu on the left.</li>
+                     <li>Match the settings as shown below. Make sure you have selected only the desired year.</li>
+                    <li>Only .xls or .xlsx files are accepted. Do not modify the spreadsheet once downloaded from Sentral.</li>
+                 </ul>
+
+                 <div class="instruction-image">
+                       <img src="assets/images/sentral-export-settings.png" alt="Sentral export settings screenshot" />
+                 </div>
+             
+              
+                  <div class="file-upload">
+                      <label for="studentFile">Select student attendance file (.xls or .xlsx):</label>
+                      <input type="file" id="studentFile" accept=".xls,.xlsx" />
+                      <div class="file-status" id="studentStatus"></div>
+                  </div>
+              
+                  <div class="progress-info" id="studentProgress"></div>
+              </div>
+
 
             <!-- STEP 2: Upload Course Codes -->
             <div class="step" id="step2">
