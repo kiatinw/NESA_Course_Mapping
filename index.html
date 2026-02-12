@@ -1261,7 +1261,7 @@
                 for (let i = 0; i < studentData.maxClasses; i++) {
                     if (i < student.classes.length) {
                         const originalClass = student.classes[i];
-                        const cleanedClass = originalClass.replace(/\d+/g, '');
+                        const cleanedClass = originalClass.length >= 5 ? originalClass.substring(2, 5).toUpperCase() : originalClass.toUpperCase();
                         let mappedValue = '';
                            
                            if (!deletedClasses.has(cleanedClass)) {
