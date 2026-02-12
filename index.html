@@ -688,28 +688,30 @@
                 </div>
             </div>
             
-            <script>
-                // Fetch last commit date from GitHub
-                fetch('https://api.github.com/repos/YOUR-USERNAME/nesa-mapping-tool/commits/main')
-                    .then(response => response.json())
-                    .then(data => {
-                        const commitDate = new Date(data.commit.author.date);
-                        const options = { 
-                            day: 'numeric', 
-                            month: 'long', 
-                            year: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true,
-                            timeZone: 'Australia/Sydney'
-                        };
-                        document.getElementById('lastCommit').textContent = 
-                            commitDate.toLocaleString('en-AU', options);
-                    })
-                    .catch(error => {
-                        document.getElementById('lastCommit').textContent = '14 February 2025';
-                    });
-            </script>
+    <script>
+            // Fetch last commit date and time from GitHub
+            // IMPORTANT: Replace 'YOUR-USERNAME' with your actual GitHub username!
+            fetch('https://api.github.com/repos/kiatinw/nesa_course_mapping/commits/main')
+                .then(response => response.json())
+                .then(data => {
+                    const commitDate = new Date(data.commit.author.date);
+                    const options = { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: 'Australia/Sydney'
+                    };
+                    const formattedDate = commitDate.toLocaleString('en-AU', options);
+                    document.getElementById('lastCommit').textContent = formattedDate;
+                })
+                .catch(error => {
+                    // Fallback if GitHub API fails
+                    document.getElementById('lastCommit').textContent = '14 February 2025';
+                });
+        </script>
         </div>
     </div>
 
