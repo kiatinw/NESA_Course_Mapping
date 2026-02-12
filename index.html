@@ -1213,26 +1213,38 @@
         function generateOutput() {
             // Collect mappings
             classMapping = {};
-         const deletedClasses = new Set();
+            const deletedClasses = new Set();
+            manuallyOverriddenClasses = new Set(); // Reset manual overrides for this run
             
+            // Track deleted classes
             uniqueClasses.forEach(className => {
                 const deleteCheckbox = document.getElementById(`delete_${className}`);
                 if (deleteCheckbox && deleteCheckbox.checked) {
                     deletedClasses.add(className);
                 }
             });
-
+        
+            // Build classMapping and track manual overrides
             uniqueClasses.forEach(className => {
                 const select = document.getElementById(`mapping_${className}`);
-                classMapping[className] = select.value || className; // Use original if unmapped
+                const manualInput = document.getElementById(`manual_${className}`);
+                
+                if (manualInput && manualInput.value.trim()) {
+                    classMapping[className] = manualInput.value.trim();
+                    manuallyOverriddenClasses.add(className);
+                } else if (select && select.value) {
+                    classMapping[className] = select.value;
+                } else {
+                    classMapping[className] = className; // unmapped
+                }
             });
-            
-            // Generate output data
+        
+            // Prepare output
             const outputData = [];
             const unmappedClasses = new Set();
             const unmatchedStudents = [];
-            
-            // Create header row with new columns
+        
+            // Header row
             const headers = [
                 'NESA Student ID',
                 'Student Name (NESA)',
@@ -1244,73 +1256,65 @@
                 headers.push(`Class ${i}`);
             }
             outputData.push(headers);
-            
-            // Process each student
+        
+            // Process students
             studentData.students.forEach((student, enrolIndex) => {
                 const row = [];
-                
-                // Check if student is matched to NESA data
+        
+                // Check NESA match
                 if (studentMatching.hasOwnProperty(enrolIndex)) {
                     const nesaStudent = nesaStudents[studentMatching[enrolIndex]];
                     row.push(nesaStudent.nesaId);
                     row.push(nesaStudent.name);
                 } else {
-                    // No NESA match
                     row.push('');
                     row.push('');
                     unmatchedStudents.push(`${student.surname}, ${student.givenNames} (ID: ${student.studentId})`);
                 }
-                
-                // Add enrolment data
+        
+                // Enrolment info
                 row.push(student.surname);
                 row.push(student.givenNames);
                 row.push(student.studentId);
-                
-                // Map classes to course numbers
+        
+                // Classes
                 for (let i = 0; i < studentData.maxClasses; i++) {
                     if (i < student.classes.length) {
                         const originalClass = student.classes[i];
                         const cleanedClass = originalClass.length >= 5 ? originalClass.substring(2, 5).toUpperCase() : originalClass.toUpperCase();
                         let mappedValue = '';
-                           
-                           if (!deletedClasses.has(cleanedClass)) {
-                               mappedValue = classMapping[cleanedClass];
-                               if (mappedValue === cleanedClass) {
-                                   unmappedClasses.add(cleanedClass);
-                               }
-                           }
-
-                        
-                        // Track unmapped classes
-                        if (mappedValue === cleanedClass) {
-                            unmappedClasses.add(cleanedClass);
+        
+                        if (!deletedClasses.has(cleanedClass)) {
+                            mappedValue = classMapping[cleanedClass];
+                            if (mappedValue === cleanedClass) {
+                                unmappedClasses.add(cleanedClass);
+                            }
                         }
-                        
+        
                         row.push(mappedValue);
                     } else {
-                        row.push(''); // Empty cell for students with fewer classes
+                        row.push('');
                     }
                 }
-                
+        
                 outputData.push(row);
             });
-            
-            // Create workbook and download
+        
+            // Generate workbook and download
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(outputData);
             XLSX.utils.book_append_sheet(wb, ws, 'Mapped Students');
-            
-            // Generate file
             XLSX.writeFile(wb, 'NESA_Mapped_Students.csv', { bookType: 'csv' });
-            
-            // Show completion
+        
+            // Mark step complete
             document.getElementById('step4').classList.add('complete');
             document.getElementById('step5').classList.add('active');
-            
+        
+            // Build report message
             const outputContainer = document.getElementById('outputContainer');
             let message = '<div class="info-box">✓ Output file generated and downloaded successfully!</div>';
-            
-            // Show unmatched students warning
+        
+            // Unmatched students
             if (unmatchedStudents.length > 0) {
                 message += '<div class="unmapped-list"><h4>⚠️ Unmatched Students</h4>';
                 message += '<p>The following students from the enrolment file were not matched to NESA data:</p><ul>';
@@ -1319,8 +1323,8 @@
                 });
                 message += '</ul></div>';
             }
-            
-            // Show unmapped classes warning
+        
+            // Unmapped classes
             if (unmappedClasses.size > 0) {
                 message += '<div class="unmapped-list"><h4>⚠️ Unmapped Classes</h4>';
                 message += '<p>The following classes were not mapped and retained their original names:</p><ul>';
@@ -1329,10 +1333,23 @@
                 });
                 message += '</ul></div>';
             }
-            
+        
+            // Manually overridden classes
+            const overriddenClasses = Array.from(manuallyOverriddenClasses).sort();
+            if (overriddenClasses.length > 0) {
+                message += '<div class="unmapped-list"><h4>✏️ Manually Overridden Classes</h4>';
+                message += '<p>The following classes were manually changed from their auto-mapped value:</p><ul>';
+                overriddenClasses.forEach(className => {
+                    const mappedValue = classMapping[className];
+                    message += `<li>${className} → ${mappedValue}</li>`;
+                });
+                message += '</ul></div>';
+            }
+        
             message += '<button onclick="location.reload()">Start New Mapping</button>';
             outputContainer.innerHTML = message;
         }
+
     </script>
 </body>
 </html>
