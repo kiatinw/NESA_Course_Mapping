@@ -4,7 +4,7 @@ A web-based tool that automates the mapping of student class enrolments from Sen
 
 ## 🌐 Live Demo
 
-**[Launch the Tool](https://kiatinw.github.io/nesa-mapping-tool/)**
+**[Launch the Tool](https://kiatinw.github.io/NESA_Course_Mapping/)**
 
 ---
 
@@ -254,7 +254,7 @@ The footer of the tool shows the last commit date/time automatically via GitHub 
 
 Found a bug? Have a subject code to add? Suggestions for improvement?
 
-1. Check the [FAQ page](https://kiatinw.github.io/nesa-mapping-tool/faq.html) first
+1. Check the [FAQ page](https://kiatinw.github.io/NESA_Course_Mapping/faq.html) first
 2. Open an issue on GitHub
 3. Or submit a pull request!
 
@@ -276,7 +276,7 @@ This tool is provided free for educational use. Created to save teachers time on
 
 ## 📞 Support
 
-- **Documentation**: See the [FAQ page](https://kiatinw.github.io/nesa-mapping-tool/faq.html)
+- **Documentation**: See the [FAQ page](https://kiatinw.github.io/NESA_Course_Mapping/faq.html)
 - **Issues**: Open a GitHub issue
 - **Questions**: Check the built-in Help & FAQs button in the tool
 
