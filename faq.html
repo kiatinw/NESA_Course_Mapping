@@ -140,9 +140,74 @@
         .warning-box strong {
             color: #e65100;
         }
+
+        .sidebar {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 200px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            font-size: 14px;
+            color: #4169E1;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar a {
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: block;
+            padding: 5px 0;
+        }
+
+        .sidebar a:hover {
+            color: #4169E1;
+            padding-left: 5px;
+        }
+
+        /* Hide sidebar on mobile */
+        @media (max-width: 1200px) {
+            .sidebar {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h3>Quick Links</h3>
+        <ul>
+            <li><a href="#getting-started">🚀 Getting Started</a></li>
+            <li><a href="#student-matching">👥 Student Matching</a></li>
+            <li><a href="#class-mapping">📚 Class Mapping</a></li>
+            <li><a href="#output-upload">📤 Output & Upload</a></li>
+            <li><a href="#troubleshooting">🔧 Troubleshooting</a></li>
+            <li><a href="#about">☕ About</a></li>
+        </ul>
+    </div>
+
     <div class="container">
         <div class="header">
             <a href="index.html" class="back-button">
@@ -158,7 +223,7 @@
 
         <div class="content">
             <!-- General Questions -->
-            <div class="faq-section">
+            <div class="faq-section" id="getting-started">
                 <h2>🚀 Getting Started</h2>
 
                 <div class="faq-item">
@@ -194,7 +259,7 @@
             </div>
 
             <!-- Student Matching -->
-            <div class="faq-section">
+            <div class="faq-section" id="student-matching">
                 <h2>👥 Student Matching</h2>
 
                 <div class="faq-item">
@@ -232,19 +297,100 @@
             </div>
 
             <!-- Class Mapping -->
-            <div class="faq-section">
+            <div class="faq-section" id="class-mapping">
                 <h2>📚 Class Mapping</h2>
 
                 <div class="faq-item">
                     <div class="faq-question">How does automatic class mapping work?</div>
                     <div class="faq-answer">
-                        The tool extracts the subject code from your class codes (e.g., <code>11MMA3</code> → <code>MMA</code>) and matches them to NESA course names. For example:
+                        The tool extracts the subject code from your class codes by removing numbers (e.g., <code>11MMA3</code> → <code>MMA</code>) and matches them to NESA course names.
+                        
+                        <br><br>
+                        
+                        <strong>Currently supported subject codes:</strong>
+                        
+                        <br><br>
+                        
+                        <strong>Mathematics (M faculty):</strong>
                         <ul>
-                            <li><code>MMA</code> → "Mathematics Advanced"</li>
-                            <li><code>SPH</code> → "Physics"</li>
-                            <li><code>HBS</code> → "Business Studies"</li>
+                            <li><code>MMA</code> - Mathematics Advanced</li>
+                            <li><code>MMS</code> - Mathematics Standard</li>
+                            <li><code>MMX</code> - Mathematics Extension</li>
+                            <li><code>MXX</code> - Mathematics Extension 2</li>
                         </ul>
-                        The tool knows about 60+ different subject codes, based on the timetable naming conventions at one school.
+                        
+                        <strong>English (E faculty):</strong>
+                        <ul>
+                            <li><code>EEN</code> - English (Standard/Advanced)</li>
+                            <li><code>ENA</code> - English Advanced</li>
+                            <li><code>ENS</code> - English Standard</li>
+                            <li><code>ENX</code> - English Extension</li>
+                            <li><code>EXX</code> - English Extension 2</li>
+                            <li><code>ESL</code> - English EAL/D</li>
+                            <li><code>EDR</code> / <code>DRA</code> - Drama</li>
+                        </ul>
+                        
+                        <strong>Science (S faculty):</strong>
+                        <ul>
+                            <li><code>SPH</code> - Physics</li>
+                            <li><code>SCH</code> - Chemistry</li>
+                            <li><code>SBI</code> - Biology</li>
+                            <li><code>SSC</code> - Science</li>
+                            <li><code>SEE</code> - Earth and Environmental Science</li>
+                            <li><code>SIS</code> - Investigating Science</li>
+                        </ul>
+                        
+                        <strong>HSIE (H faculty):</strong>
+                        <ul>
+                            <li><code>HBS</code> - Business Studies</li>
+                            <li><code>HLS</code> - Legal Studies</li>
+                            <li><code>HAH</code> - Ancient History</li>
+                            <li><code>HMH</code> - Modern History</li>
+                            <li><code>HGE</code> - Geography</li>
+                            <li><code>HEC</code> - Economics</li>
+                            <li><code>HSC</code> - Society and Culture</li>
+                            <li><code>HWS</code> - Work Studies</li>
+                        </ul>
+                        
+                        <strong>CAPA (C faculty):</strong>
+                        <ul>
+                            <li><code>CVA</code> - Visual Arts</li>
+                            <li><code>CMU</code> - Music</li>
+                            <li><code>CDA</code> - Dance</li>
+                            <li><code>CDR</code> - Drama</li>
+                        </ul>
+                        
+                        <strong>TAS (T faculty):</strong>
+                        <ul>
+                            <li><code>TDT</code> - Design and Technology</li>
+                            <li><code>TFT</code> - Food Technology</li>
+                            <li><code>TTI</code> - Industrial Technology (Timber)</li>
+                            <li><code>TTD</code> - Textiles and Design</li>
+                            <li><code>TSW</code> - Software Design</li>
+                            <li><code>TIM</code> / <code>TMM</code> - Industrial Technology (Metal/Multimedia)</li>
+                            <li><code>TAG</code> - Agriculture</li>
+                            <li><code>TES</code> - Engineering Studies</li>
+                        </ul>
+                        
+                        <strong>PDHPE (P faculty):</strong>
+                        <ul>
+                            <li><code>PSP</code> - Sport, Lifestyle and Recreation</li>
+                            <li><code>PDA</code> - Dance</li>
+                        </ul>
+                        
+                        <strong>Languages (L faculty):</strong>
+                        <ul>
+                            <li><code>LFB</code> - French Beginners</li>
+                            <li><code>LFC</code> - French Continuers</li>
+                            <li><code>LSB</code> - Spanish Beginners</li>
+                            <li><code>LSC</code> - Spanish Continuers</li>
+                            <li><code>LJB</code> - Japanese Beginners</li>
+                            <li><code>LJC</code> - Japanese Continuers</li>
+                        </ul>
+                        
+                        <div class="tip-box">
+                            <strong>Note:</strong> These codes are based on one school's timetable naming conventions. If your school uses different codes, you can manually map them using the dropdown or text box.
+                        </div>
                     </div>
                 </div>
 
@@ -275,9 +421,9 @@
                     <div class="faq-answer">
                         Yes! Check the "Delete" box next to any class you don't want in the output. This is useful for:
                         <ul>
-                            <li>Roll call</li>
-                            <li>Sport</li>
-                            <li>Other classes not needed for Schools Online</li>
+                            <li>Study periods</li>
+                            <li>Home room/pastoral care</li>
+                            <li>Non-academic classes</li>
                         </ul>
                     </div>
                 </div>
@@ -296,7 +442,7 @@
             </div>
 
             <!-- Output & Upload -->
-            <div class="faq-section">
+            <div class="faq-section" id="output-upload">
                 <h2>📤 Output & Upload</h2>
 
                 <div class="faq-item">
@@ -340,7 +486,7 @@
             </div>
 
             <!-- Troubleshooting -->
-            <div class="faq-section">
+            <div class="faq-section" id="troubleshooting">
                 <h2>🔧 Troubleshooting</h2>
 
                 <div class="faq-item">
@@ -390,62 +536,30 @@
                 </div>
             </div>
 
-            <!-- Tips & Tricks -->
-            <div class="faq-section">
-                <h2>💡 Tips & Tricks</h2>
+            <!-- About -->
+            <div class="faq-section" id="about">
+                <h2>☕ About</h2>
 
                 <div class="faq-item">
-                    <div class="faq-question">Best practices for using this tool</div>
                     <div class="faq-answer">
-                        <ul>
-                            <li>Always review the automatic matches - don't blindly trust them, especially for students with common surnames</li>
-                            <li>Use the "Hide Matched Students" button to speed up manual matching</li>
-                            <li>Select the correct year level (10 or 11) before running the class mapping</li>
-                            <li>Keep the warning boxes open while checking your output file - they tell you what needs fixing</li>
-                            <li>Save your work - download the file as soon as it's ready, as the browser doesn't save it automatically</li>
-                        </ul>
-                    </div>
-                </div>
+                        I'm a relieving Head Teacher Stage 6 at a public school on the North Shore.
 
-                <div class="faq-item">
-                    <div class="faq-question">Keyboard shortcuts</div>
-                    <div class="faq-answer">
-                        <ul>
-                            <li><strong>Tab:</strong> Move to next dropdown/field</li>
-                            <li><strong>Space:</strong> Open dropdown</li>
-                            <li><strong>Arrow keys:</strong> Navigate dropdown options</li>
-                            <li><strong>Enter:</strong> Select option</li>
-                        </ul>
+                        <br><br>
+
+                        This tool was built to save time on a repetitive administrative process.
+                        If you know who I am and it's saved you time, feel free to shout me a coffee sometime ☕
+
+                        <br><br>
+
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdylzN91pIhBUZ5SaeYIPBEU6JtSAXeF1NEEELKNAz2nHfPBA/viewform?usp=publish-editor"
+                           target="_blank"
+                           style="display:inline-block; background:#4169E1; color:white; padding:10px 18px; 
+                                  border-radius:6px; text-decoration:none; font-weight:600;">
+                            📬 Contact / Feedback
+                        </a>
                     </div>
                 </div>
             </div>
-
-            <!-- Contact -->
-            <!-- About -->
-<div class="faq-section">
-    <h2>☕ About</h2>
-
-    <div class="faq-item">
-        <div class="faq-answer">
-            I'm a relieving Head Teacher Stage 6 at a public school on the North Shore.
-
-            <br><br>
-
-            This tool was built to save time on a repetitive administrative process.
-            If you know who I am and it’s saved you time, feel free to shout me a coffee sometime ☕
-
-            <br><br>
-
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSdylzN91pIhBUZ5SaeYIPBEU6JtSAXeF1NEEELKNAz2nHfPBA/viewform?usp=publish-editor"
-               target="_blank"
-               style="display:inline-block; background:#4169E1; color:white; padding:10px 18px; 
-                      border-radius:6px; text-decoration:none; font-weight:600;">
-                📬 Contact / Feedback
-            </a>
-        </div>
-    </div>
-</div>
-
 
         </div>
     </div>
