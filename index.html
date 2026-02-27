@@ -1,1521 +1,967 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NESA Course Mapping Tool</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RankForge</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap');
+:root{--ink:#1a1814;--paper:#f5f0e8;--cream:#ede7d6;--accent:#c84b2f;--muted:#8a8278;--border:rgba(26,24,20,0.15);--gt-bg:#f0e8f8;--gt-border:#c0a0d8;--top30-bg:#fdf2cc;--top30-border:#e8c840}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Mono',monospace;background:var(--paper);color:var(--ink);min-height:100vh;padding:2rem}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #6495ED 0%, #4169E1 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+.masthead{border-bottom:2px solid var(--ink);padding-bottom:1.5rem;margin-bottom:2rem;text-align:center}
+.masthead h1{font-family:'DM Serif Display',serif;font-size:clamp(3.5rem,10vw,7rem);line-height:1;letter-spacing:-.03em}
+.masthead h1 em{font-style:italic;color:var(--accent)}
+.masthead .tagline{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:.5rem}
+.faq-link{display:inline-block;margin-top:.75rem;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:2px;padding:.25rem .8rem;transition:all .15s}
+.faq-link:hover{color:var(--ink);border-color:var(--ink);background:var(--cream)}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
+.panel{background:var(--cream);border:1px solid var(--border);border-radius:4px;margin-bottom:1.5rem;overflow:hidden}
+.panel-header{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;cursor:pointer;user-select:none}
+.panel-header h3{font-family:'DM Serif Display',serif;font-size:1.1rem;flex:1}
+.panel-arrow{font-size:.55rem;color:var(--muted);transition:transform .2s}
+.panel-header.open .panel-arrow{transform:rotate(90deg)}
+.panel-body{padding:0 1.25rem 1.25rem;display:none}
+.panel-body.open{display:block}
+.step{display:flex;gap:.75rem;margin-bottom:.3rem;align-items:baseline;font-size:.75rem;line-height:1.7}
+.step-num{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--accent);flex-shrink:0;width:1rem}
 
-        .header {
-            background: linear-gradient(135deg, #6495ED 0%, #4169E1 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            position: relative;
-        }
+.settings{background:var(--cream);border:1px solid var(--border);border-radius:4px;padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+.settings-grid{display:grid;grid-template-columns:auto 1fr;gap:.9rem 1.5rem;align-items:start}
+.setting-label-group{display:flex;flex-direction:column;gap:.2rem;padding-top:.45rem}
+.setting-label-group label{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:500;white-space:nowrap}
+.setting-label-group .hint{font-size:.65rem;color:var(--muted);line-height:1.4;max-width:34ch}
+.setting-control{display:flex;flex-direction:column;gap:.2rem}
+.settings input[type=text],.settings select{font-family:'DM Mono',monospace;font-size:.8rem;background:var(--paper);border:1px solid var(--border);border-radius:2px;padding:.4rem .6rem;color:var(--ink);width:100%;max-width:380px}
+.settings input[type=text]:focus,.settings select:focus{outline:none;border-color:var(--accent)}
 
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
+/* Penalty panel */
+.penalty-section-label{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:.4rem;margin:1.2rem 0 .6rem;font-weight:500;display:flex;align-items:center;gap:.75rem}
+.penalty-section-label .apply-all-btn{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;padding:.18rem .55rem;background:var(--paper);border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--muted);transition:all .15s;margin-left:auto}
+.penalty-section-label .apply-all-btn:hover{border-color:var(--gt-border);color:#5a2a8a;background:var(--gt-bg)}
+.penalty-controls{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.penalty-mode-label{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.seg-control{display:flex;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.seg-control button{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;padding:.3rem .8rem;background:var(--paper);border:none;cursor:pointer;color:var(--muted);transition:background .15s,color .15s}
+.seg-control button.active{background:var(--ink);color:var(--paper)}
+.seg-control button:not(:last-child){border-right:1px solid var(--border)}
+.category-legend{display:flex;gap:.75rem;flex-wrap:wrap;font-size:.68rem}
+.cat-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:2px;border:1px solid var(--border);cursor:default}
+.cat-badge.easy{background:#e8f4e8;border-color:#a8d0a8;color:#2a5a2a}
+.cat-badge.normal{background:var(--cream)}
+.cat-badge.hard{background:#e8eef8;border-color:#a8b8d8;color:#1a2a5a}
+.penalty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.5rem;margin-bottom:.5rem}
+.penalty-row{display:flex;align-items:center;gap:.6rem;padding:.4rem .6rem;background:var(--paper);border:1px solid var(--border);border-radius:3px}
+.penalty-subject-name{flex:1;font-size:.72rem;line-height:1.3}
+.gt-badge{font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;padding:.1rem .35rem;border-radius:2px;background:var(--gt-bg);border:1px solid var(--gt-border);color:#5a2a8a;flex-shrink:0}
+.penalty-row input[type=number]{font-family:'DM Mono',monospace;font-size:.75rem;width:5rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:.25rem .4rem;color:var(--ink);text-align:right}
+.penalty-row input[type=number]:focus{outline:none;border-color:var(--accent)}
+.cat-select{font-family:'DM Mono',monospace;font-size:.7rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:.25rem .3rem;color:var(--ink);cursor:pointer}
+.cat-select:focus{outline:none;border-color:var(--accent)}
+.penalty-apply-btn{margin-top:1rem;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem 1rem;background:var(--ink);color:var(--paper);border:none;border-radius:2px;cursor:pointer;transition:background .15s}
+.penalty-apply-btn:hover{background:var(--accent)}
 
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
+/* Apply-all modal */
+.apply-all-row{display:flex;align-items:center;gap:.75rem;margin-top:.75rem;padding:.6rem;background:var(--gt-bg);border:1px solid var(--gt-border);border-radius:3px}
+.apply-all-row label{font-size:.7rem;color:#5a2a8a}
+.apply-all-row select,.apply-all-row input[type=number]{font-family:'DM Mono',monospace;font-size:.75rem;background:var(--paper);border:1px solid var(--gt-border);border-radius:2px;padding:.25rem .4rem;color:var(--ink)}
+.apply-all-row button{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .7rem;background:#5a2a8a;color:#fff;border:none;border-radius:2px;cursor:pointer}
+.apply-all-row button:hover{background:#3a1a6a}
 
-        .faq-button {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            background: white;
-            color: #4169E1;
-            padding: 10px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
+/* Maths grouping */
+.maths-group-area{margin-top:.5rem}
+.maths-group-controls{display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap}
+.add-group-btn{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .7rem;background:transparent;border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--muted);transition:all .15s}
+.add-group-btn:hover{border-color:var(--ink);color:var(--ink)}
+.maths-groups-container{display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-start}
+.maths-group-col{background:var(--paper);border:1px solid var(--border);border-radius:4px;min-width:160px;max-width:220px;flex:1}
+.maths-group-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .6rem;border-bottom:1px solid var(--border);background:var(--cream)}
+.maths-group-name-input{font-family:'DM Serif Display',serif;font-size:.9rem;border:none;background:transparent;color:var(--ink);flex:1;min-width:0;padding:0}
+.maths-group-name-input:focus{outline:none;border-bottom:1px solid var(--accent)}
+.remove-group-btn{font-size:.75rem;background:none;border:none;cursor:pointer;color:var(--muted);padding:.1rem .25rem;line-height:1;flex-shrink:0}
+.remove-group-btn:hover{color:var(--accent)}
+.maths-drop-zone{min-height:52px;padding:.4rem;display:flex;flex-direction:column;gap:.3rem;border-radius:0 0 4px 4px;transition:background .15s}
+.maths-drop-zone.dz-over{background:#f0e8d8;outline:2px dashed var(--accent)}
+.maths-class-chip{padding:.25rem .5rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;font-size:.68rem;cursor:grab;user-select:none;display:flex;align-items:center;gap:.3rem;transition:opacity .15s}
+.maths-class-chip.dragging{opacity:.4;cursor:grabbing}
+.maths-class-chip .chip-x{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.65rem;line-height:1;padding:0 .1rem;margin-left:auto;flex-shrink:0}
+.maths-class-chip .chip-x:hover{color:var(--accent)}
 
-        .faq-button:hover {
-            background: #f0f4ff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
 
-        .content {
-            padding: 30px;
-        }
+/* Upload */
+.upload-zone{border:2px dashed var(--border);background:var(--cream);border-radius:4px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;margin-bottom:1.5rem}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:#f0e8d8}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:2.5rem;margin-bottom:.75rem;display:block}
+.upload-zone h2{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:.4rem}
+.upload-zone p{font-size:.75rem;color:var(--muted);letter-spacing:.05em}
 
-        .step {
-            margin-bottom: 40px;
-            padding: 25px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            background: #fafafa;
-        }
+#status{font-size:.75rem;letter-spacing:.08em;color:var(--muted);margin-bottom:1.5rem;min-height:1.2em;text-transform:uppercase}
+#status.error{color:var(--accent)}
+#status.success{color:#2a7a3b}
+.progress-bar{height:2px;background:var(--cream);border-radius:2px;overflow:hidden;margin-bottom:2rem;display:none}
+.progress-bar.visible{display:block}
+.progress-fill{height:100%;background:var(--accent);width:0%;transition:width .3s}
 
-        .step.active {
-            border-color: #6495ED;
-            background: #f0f4ff;
-        }
+.results{display:none}
+.results.visible{display:block}
 
-        .step.complete {
-            border-color: #4caf50;
-            background: #f1f8f4;
-        }
+.collapsible-section{margin-bottom:1.5rem}
+.collapsible-header{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;background:var(--ink);color:var(--paper);border-radius:4px 4px 0 0;cursor:pointer;user-select:none;margin-top:2rem}
+.collapsible-header.collapsed{border-radius:4px}
+.collapsible-header h2{font-family:'DM Serif Display',serif;font-size:1.3rem;flex:1}
+.collapsible-header .count{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,240,232,.55)}
+.collapse-toggle{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,240,232,.6);border:1px solid rgba(245,240,232,.25);border-radius:2px;padding:.2rem .5rem}
+.collapsible-body{display:block}
+.collapsible-body.hidden{display:none}
 
-        .step-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead tr{background:#2e2b26;color:var(--paper)}
+thead th{padding:.55rem .9rem;text-align:left;font-weight:500;letter-spacing:.08em;text-transform:uppercase;font-size:.62rem;white-space:nowrap}
+thead th.center{text-align:center}
+.col-subjects-list.hide{display:none}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--cream)}
+tbody tr.gold{background:#fdf6e0}
+tbody tr.gold:hover{background:#f9efcd}
+tbody tr.top30{background:var(--top30-bg)!important}
+tbody tr.top30:hover{background:#faedb0!important}
+td{padding:.55rem .9rem;vertical-align:middle}
+td.name{font-family:'DM Serif Display',serif;font-size:.95rem;white-space:nowrap}
+td.center{text-align:center;font-variant-numeric:tabular-nums}
+td.subjects-list-cell{font-size:.68rem;color:var(--muted);max-width:260px;line-height:1.5}
 
-        .step-number {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #6495ED;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 15px;
-            font-size: 18px;
-        }
+.pill{display:inline-block;padding:.15rem .5rem;border-radius:2px;font-size:.72rem;background:var(--cream);border:1px solid var(--border);white-space:nowrap}
+.pill.top{background:#d8f0dd;border-color:#9ecba6;color:#1a5c24}
+.pill.bottom{background:#fde8e3;border-color:#e8b0a2;color:#7a2010}
+.pill.missing{color:var(--muted);background:transparent;border-color:transparent;font-style:italic}
+.pill.gt-pill{background:var(--gt-bg);border-color:var(--gt-border)}
 
-        .step.complete .step-number {
-            background: #4caf50;
-        }
+.position-badge{display:inline-flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;border-radius:50%;font-size:.7rem;font-weight:500;background:var(--cream);border:1px solid var(--border)}
+.position-badge.p1{background:#f0d060;border-color:#c9a030;color:#5a3a00}
+.position-badge.p2{background:#d8d8d8;border-color:#aaa;color:#333}
+.position-badge.p3{background:#e8c498;border-color:#c09060;color:#5a3010}
+.position-badge.ptop30{background:var(--top30-bg);border-color:var(--top30-border)}
 
-        .step-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-        }
+.has-tip{position:relative;cursor:help;border-bottom:1px dashed var(--muted)}
+.has-tip:hover::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);font-size:.65rem;padding:.3rem .6rem;border-radius:3px;white-space:nowrap;pointer-events:none;margin-bottom:4px;z-index:10}
 
-        .file-upload {
-            margin: 15px 0;
-        }
+.table-toolbar{display:flex;align-items:center;gap:1rem;padding:.5rem 1rem;background:#f0ece2;border:1px solid var(--border);border-top:none;flex-wrap:wrap}
+.toggle-subjects-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .6rem;border:1px solid var(--border);background:var(--paper);color:var(--muted);font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all .15s}
+.toggle-subjects-btn:hover{border-color:var(--ink);color:var(--ink)}
+.toggle-subjects-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-        .file-upload label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #555;
-        }
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.2rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background .15s,color .15s}
+.btn:hover{background:var(--accent);border-color:var(--accent)}
+.btn.secondary{background:transparent;color:var(--ink)}
+.btn.secondary:hover{background:var(--ink);color:var(--paper)}
+.actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem}
 
-        .file-input-wrapper {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        input[type="file"] {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .file-input-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 16px 24px;
-            background: white;
-            border: 2px solid #6495ED;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            color: #6495ED;
-            box-shadow: 0 2px 8px rgba(100, 149, 237, 0.15);
-        }
-
-        .file-input-label:hover {
-            background: #6495ED;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(100, 149, 237, 0.3);
-        }
-
-        .file-input-label svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .file-name-display {
-            margin-top: 10px;
-            padding: 8px 12px;
-            background: #f0f4ff;
-            border-radius: 6px;
-            font-size: 13px;
-            color: #4169E1;
-            display: none;
-        }
-
-        .file-name-display.show {
-            display: block;
-        }
-
-        .file-status {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 6px;
-            display: none;
-        }
-
-        .file-status.success {
-            display: block;
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #4caf50;
-        }
-
-        .file-status.error {
-            display: block;
-            background: #ffebee;
-            color: #c62828;
-            border: 1px solid #ef5350;
-        }
-
-        .mapping-container {
-            margin-top: 20px;
-        }
-
-        .mapping-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .mapping-label {
-            font-weight: 600;
-            min-width: 150px;
-            color: #333;
-            font-size: 16px;
-        }
-
-        .mapping-select {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            max-width: 500px;
-        }
-
-        .mapping-select:focus {
-            outline: none;
-            border-color: #6495ED;
-        }
-
-        button {
-            background: #6495ED;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        button:hover {
-            background: #4169E1;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(100, 149, 237, 0.4);
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-
-        .warning-box {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-
-        .unmapped-list {
-            margin-top: 15px;
-            padding: 15px;
-            background: #fff3e0;
-            border-radius: 6px;
-            border: 1px solid #ff9800;
-        }
-
-        .unmapped-list h4 {
-            color: #e65100;
-            margin-bottom: 10px;
-        }
-
-        .unmapped-list ul {
-            margin-left: 20px;
-        }
-
-        .unmapped-list li {
-            color: #f57c00;
-            margin: 5px 0;
-        }
-
-        .progress-info {
-            margin-top: 15px;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .match-item {
-            display: grid;
-            grid-template-columns: 2fr 1fr 2fr 1fr;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .match-item.matched {
-            border-left: 4px solid #4caf50;
-        }
-
-        .match-item.unmatched {
-            border-left: 4px solid #ff9800;
-        }
-
-        .match-column {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .match-label {
-            font-size: 11px;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-
-        .match-value {
-            font-size: 14px;
-            color: #333;
-        }
-
-        .match-arrow {
-            text-align: center;
-            font-size: 20px;
-            color: #4caf50;
-        }
-
-        .match-arrow.unmatched {
-            color: #ff9800;
-        }
-
-        .match-select {
-            padding: 8px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        .match-select:focus {
-            outline: none;
-            border-color: #6495ED;
-        }
-
-        .match-stats {
-            display: flex;
-            gap: 20px;
-            margin: 15px 0;
-            padding: 15px;
-            background: white;
-            border-radius: 6px;
-        }
-
-        .stat-item {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border-radius: 6px;
-        }
-
-        .stat-item.success {
-            background: #e8f5e9;
-        }
-
-        .stat-item.warning {
-            background: #fff3e0;
-        }
-
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-        }
-
-        .step-instructions {
-            margin: 15px 0;
-            padding-left: 20px;
-            line-height: 1.6;
-        }
-
-        .step-instructions li {
-            margin: 8px 0;
-            color: #555;
-        }
-
-        .step-instructions b {
-            color: #333;
-        }
-
-        .instruction-image {
-            text-align: center;
-            margin: 15px 0;
-        }
-    
-        .instruction-image img {
-            max-width: 600px;
-            width: 100%;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            display: inline-block;
-        }
-    </style>
+details.debug{margin-top:2.5rem;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+details.debug summary{padding:.6rem 1rem;cursor:pointer;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--cream);user-select:none}
+details.debug pre{padding:1rem;font-size:.7rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;background:#fff}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <a href="faq.html" class="faq-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                Help & FAQs
-            </a>
-            <h1>📚 NESA Course Mapping Tool</h1>
-            <p>This tool maps class codes from Sentral to the course codes provided by NESA for use in Schools Online.</p>
-        </div>
 
-        <div class="construction-banner">
-            <div class="banner-title">🚧 This Page Is Still Under Construction! 🚧</div>
-            <div class="banner-text">
-                Features may be incomplete, unstable, or behave unpredictably.  
-                Please use with caution and carefully review all generated files before relying on them.
-            </div>
-        </div>
+<div class="masthead">
+  <h1>Rank<em>Forge</em></h1>
+  <p class="tagline">Parse · Rank · Compare</p>
+  <a href="faq.html" class="faq-link">FAQ &amp; Privacy ▸</a>
+</div>
 
-        <!-- UNDER CONSTRUCTION BANNER START-->
-        <style>
-            .construction-banner {
-                background: linear-gradient(135deg, #ffef9f, #ffd86b);
-                border: 3px dashed #c47f00;
-                padding: 20px;
-                margin-bottom: 25px;
-                text-align: center;
-                border-radius: 10px;
-                animation: wiggle 1.5s infinite ease-in-out;
-            }
-        
-            .construction-banner .banner-title {
-                font-size: 1.6rem;
-                font-weight: bold;
-                color: #8a4b00;
-                margin-bottom: 8px;
-            }
-        
-            .construction-banner .banner-text {
-                font-size: 1rem;
-                color: #5a3a00;
-            }
-        
-            @keyframes wiggle {
-                0% { transform: rotate(0deg); }
-                25% { transform: rotate(1deg); }
-                50% { transform: rotate(0deg); }
-                75% { transform: rotate(-1deg); }
-                100% { transform: rotate(0deg); }
-            }
-        </style>
-        <!-- UNDER CONSTRUCTION BANNER END -->
+<div class="panel">
+  <div class="panel-header" onclick="togglePanel(this)">
+    <h3>How to generate the PDF from Sentral</h3>
+    <span class="panel-arrow">▶</span>
+  </div>
+  <div class="panel-body">
+    <div class="step"><span class="step-num">1</span><span>Log in to Sentral and navigate to <strong>Academic Reports</strong>.</span></div>
+    <div class="step"><span class="step-num">2</span><span>Select <strong>Summary Report</strong> from the report type options.</span></div>
+    <div class="step"><span class="step-num">3</span><span>Set the year group to the cohort you want to analyse.</span></div>
+    <div class="step"><span class="step-num">4</span><span>Under grouping options, select <strong>Group by Student</strong>.</span></div>
+    <div class="step"><span class="step-num">5</span><span>Generate and download the PDF, then upload it below.</span></div>
+  </div>
+</div>
 
-        
-        <div class="content">
-            <!-- STEP 1: Upload Student Enrolments -->
-            <div class="step active" id="step1">
-                <div class="step-header">
-                    <div class="step-number">1</div>
-                    <div class="step-title">Upload Student Attendance Spreadsheet</div>
-                </div>
-            
-                <ul class="step-instructions">
-                    <li>Go to the <b>Profiles</b> module on Sentral.</li>
-                    <li>Select <b>Exports</b> in the menu on the left.</li>
-                    <li>Match the settings as shown below. Make sure you have selected only the desired year.</li>
-                    <li>Only .xls or .xlsx files are accepted. Do not modify the spreadsheet once downloaded from Sentral.</li>
-                </ul>
-
-                <div class="instruction-image">
-                    <img src="SentralSettings.png" alt="Sentral export settings screenshot" />
-                </div>
-            
-                <div class="file-upload">
-                    <label for="studentFile" style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">Select student attendance file (.xls or .xlsx):</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="studentFile" accept=".xls,.xlsx" />
-                        <label for="studentFile" class="file-input-label">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <span>Choose File</span>
-                        </label>
-                        <div class="file-name-display" id="studentFileName"></div>
-                    </div>
-                    <div class="file-status" id="studentStatus"></div>
-                </div>
-            
-                <div class="progress-info" id="studentProgress"></div>
-            </div>
-
-            <!-- STEP 2: Upload NESA Course Codes -->
-            <div class="step" id="step2">
-                <div class="step-header">
-                    <div class="step-number">2</div>
-                    <div class="step-title">Upload NESA Course Codes</div>
-                </div>
-            
-                <ul class="step-instructions">
-                    <li>In Schools Online, go to <b>Courses Offered at Your School</b>.</li>
-                    <li>Change the year of study to the one you are working with.</li>
-                    <li>Select <b>Show only courses offered</b>. This will show courses offered at your school and make matching easier.</li>
-                    <li>Click on the download button. Do not make any changes to the file.</li>
-                </ul>
-            
-                <div class="file-upload">
-                    <label for="courseFile" style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">Select NESA course codes file (.csv):</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="courseFile" accept=".csv" />
-                        <label for="courseFile" class="file-input-label">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <span>Choose File</span>
-                        </label>
-                        <div class="file-name-display" id="courseFileName"></div>
-                    </div>
-                    <div class="file-status" id="courseStatus"></div>
-                </div>
-            
-                <div class="progress-info" id="courseProgress"></div>
-            </div>
-
-            <!-- STEP 3: Upload NESA Template -->
-            <div class="step" id="step3">
-                <div class="step-header">
-                    <div class="step-number">3</div>
-                    <div class="step-title">Upload NESA Template</div>
-                </div>
-            
-                <ul class="step-instructions">
-                    <li>In Schools Online, go to <b>20XX Enrolments</b>.</li>
-                    <li>Select <b>Load Student Courses from a file</b>.</li>
-                    <li>Make sure the correct year of study is selected.</li>
-                    <li>On the left, click on <b>create entry file</b> to download the file. Do not make any changes to the file.</li>
-                </ul>
-            
-                <div class="file-upload">
-                    <label for="nesaStudentFile" style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">Select NESA student data file (.csv):</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="nesaStudentFile" accept=".csv" />
-                        <label for="nesaStudentFile" class="file-input-label">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <span>Choose File</span>
-                        </label>
-                        <div class="file-name-display" id="nesaStudentFileName"></div>
-                    </div>
-                    <div class="file-status" id="nesaStudentStatus"></div>
-                </div>
-            
-                <div class="progress-info" id="nesaStudentProgress"></div>
-            
-                <div id="matchingContainer" class="hidden">
-                    <div class="info-box" style="margin-top: 20px;">
-                        Review automatic matches below. Unmatched students can be manually matched using the dropdowns.
-                    </div>
-                    <div id="matchingList"></div>
-                    <button id="confirmMatchingBtn" onclick="confirmMatching()" style="margin-top: 20px;">
-                        Confirm Matching & Continue
-                    </button>
-                </div>
-            </div>
-
-            <!-- STEP 4: Map Classes to Courses -->
-            <div class="step" id="step4">
-                <div class="step-header">
-                    <div class="step-number">4</div>
-                    <div class="step-title">Map Classes to NESA Courses</div>
-                </div>
-                <div class="info-box">
-                    Map each unique class code to its corresponding NESA course. Most courses should do this automatically based on the class codes from Sentral and our database. Unmapped classes will retain their original names in the output. You will need to manually map any courses that were not automatically matched, and any Board Endorsed courses by using the textbox on the right of each course. For any classes on the timetable that do <i>not</i> need to be uploaded to Schools Online, click on the delete checkbox to remove it from the relevant students.
-                </div>
-                <p>
-                    Please note that the class codes will attempt to match based on the timetable naming conventions of one school. If your school's naming conventions differ greatly from ours, you may have to manually map a few more codes. See the Help & FAQs for more information.
-                </p>
-                
-                <!-- Year Level Selector -->
-                <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">
-                        📅 Select Year Level (for auto-mapping):
-                    </label>
-                    <div style="display: flex; gap: 15px;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="yearLevel" value="10" id="year10" style="margin-right: 8px;">
-                            <span>Year 10</span>
-                        </label>
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="yearLevel" value="11" id="year11" checked style="margin-right: 8px;">
-                            <span>Year 11</span>
-                        </label>
-                    </div>
-                    <button onclick="rerunAutoMapping()" style="margin-top: 10px; padding: 8px 20px; font-size: 14px;">
-                        🔄 Re-run Auto-Mapping
-                    </button>
-                </div>
-                
-                <div class="mapping-container" id="mappingContainer"></div>
-                <button id="generateBtn" onclick="generateOutput()" disabled>Generate Output Spreadsheet</button>
-            </div>
-
-            <!-- STEP 5: Download Output -->
-            <div class="step" id="step5">
-                <div class="step-header">
-                    <div class="step-number">5</div>
-                    <div class="step-title">Download Output</div>
-                </div>
-
-                <p style="margin-bottom: 15px; line-height: 1.6; color: #555;">
-                    Columns C, D and E are from the Sentral Attendance spreadsheet and are there for you to double check that the matching was done correctly. It is very important to check students with <i>common or duplicate surnames</i>. To upload this spreadsheet to Schools Online,
-                </p>
-                
-                <ul class="step-instructions">
-                    <li>Delete any students who do not have a NESA number. If you upload without doing this, Schools Online will get upset.</li>
-                    <li>Delete columns C, D and E.</li>
-                    <li>Do a final check for any courses that are still timetable codes instead of NESA codes.</li>
-                    <li>Make sure the file is still a csv.</li>
-                </ul>
-                
-                <div id="outputContainer"></div>
-            </div>
-
-            <div class="footer">
-                <div class="footer-content">
-                    <span class="last-updated">Last Updated:</span> 
-                    <span id="lastCommit">Loading...</span> | 
-                </div>
-            </div>
-            
-    <script>
-            // Fetch last commit date and time from GitHub
-            // IMPORTANT: Replace 'YOUR-USERNAME' with your actual GitHub username!
-            fetch('https://api.github.com/repos/kiatinw/nesa_course_mapping/commits/main')
-                .then(response => response.json())
-                .then(data => {
-                    const commitDate = new Date(data.commit.author.date);
-                    const options = { 
-                        day: 'numeric', 
-                        month: 'long', 
-                        year: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true,
-                        timeZone: 'Australia/Sydney'
-                    };
-                    const formattedDate = commitDate.toLocaleString('en-AU', options);
-                    document.getElementById('lastCommit').textContent = formattedDate;
-                })
-                .catch(error => {
-                    // Fallback if GitHub API fails
-                    document.getElementById('lastCommit').textContent = '14 February 2025';
-                });
-        </script>
-        </div>
+<div class="settings">
+  <div class="settings-grid">
+    <div class="setting-label-group">
+      <label for="yearSelect">Year Group</label>
+      <span class="hint">Sets which class codes to recognise. Years 7–10 also enables maths grouping and G&amp;T class splitting.</span>
     </div>
+    <div class="setting-control">
+      <select id="yearSelect" onchange="onScoreModeChange()">
+        <option value="7">Year 7</option><option value="8">Year 8</option>
+        <option value="9">Year 9</option><option value="10">Year 10</option>
+        <option value="11">Year 11</option><option value="12" selected>Year 12</option>
+      </select>
+    </div>
+    <div class="setting-label-group">
+      <label for="scoreMode">Score mode</label>
+      <span class="hint">Rank mode extracts X/Y ranks. Percentage mode extracts % marks and ranks via z-score per subject.</span>
+    </div>
+    <div class="setting-control">
+      <select id="scoreMode" onchange="onScoreModeChange()">
+        <option value="rank">Rank (e.g. 17/61) — sort by lowest</option>
+        <option value="percent">Percentage mark (e.g. 87%) — z-score</option>
+      </select>
+    </div>
+    <div class="setting-label-group">
+      <label id="rankKeyLabel">Score search keys</label>
+      <span class="hint">All non-empty keys are checked on every line. Add extras for subjects that use different wording.</span>
+    </div>
+    <div class="setting-control" style="gap:.4rem">
+      <input type="text" id="rankKey"  value="Overall Assessment Rank" placeholder="Key 1"/>
+      <input type="text" id="rankKey2" value="" placeholder="Key 2 (optional)"/>
+      <input type="text" id="rankKey3" value="" placeholder="Key 3 (optional)"/>
+      <input type="text" id="rankKey4" value="" placeholder="Key 4 (optional)"/>
+    </div>
+  </div>
+</div>
 
-    <script>
-        let studentData = null;
-        let courseCodes = [];
-        let nesaStudents = [];
-        let studentMatching = {}; // Maps enrolment student index to NESA student index
-        let uniqueClasses = [];
-        let classMapping = {};
-        let manuallyOverriddenClasses = new Set();
-        let deletedClasses = new Set();
+<div class="upload-zone" id="uploadZone">
+  <input type="file" id="fileInput" accept=".pdf"/>
+  <span class="upload-icon">📄</span>
+  <h2>Drop your PDF here</h2>
+  <p>or click to browse — no data leaves your device</p>
+</div>
 
+<div id="status"></div>
+<div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
 
-        // Step 1: Handle student enrolments upload
-        document.getElementById('studentFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+<div class="results" id="results">
+  <div class="actions">
+    <button class="btn" onclick="exportCSV('ranks')">⬇ Export scores CSV</button>
+    <button class="btn" onclick="exportCSV('best')">⬇ Export leaderboard CSV</button>
+    <button class="btn secondary" onclick="reparseFile()">↻ Re-parse with current settings</button>
+    <button class="btn secondary" onclick="resetTool()">↺ Load another PDF</button>
+  </div>
 
-            // Show filename
-            const fileNameDisplay = document.getElementById('studentFileName');
-            fileNameDisplay.textContent = `📄 ${file.name}`;
-            fileNameDisplay.classList.add('show');
+  <div class="panel" id="penaltyPanel" style="display:none">
+    <div class="panel-header" onclick="togglePanel(this)">
+      <h3>Subject Weighting &amp; Maths Grouping</h3>
+      <span class="panel-arrow">▶</span>
+    </div>
+    <div class="panel-body" id="penaltyBody"></div>
+  </div>
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
-                    
-                    // Process student data
-                    studentData = processStudentData(jsonData);
-                    
-                    // Extract unique class names
-                    uniqueClasses = extractUniqueClasses(studentData);
-                    
-                    // Show success
-                    const status = document.getElementById('studentStatus');
-                    status.className = 'file-status success';
-                    status.textContent = `✓ Loaded ${studentData.students.length} students with ${uniqueClasses.length} unique classes`;
-                    
-                    const progress = document.getElementById('studentProgress');
-                    progress.textContent = `Unique classes found: ${uniqueClasses.join(', ')}`;
-                    
-                    // Mark step complete and activate next
-                    document.getElementById('step1').classList.add('complete');
-                    document.getElementById('step2').classList.add('active');
-                    
-                } catch (error) {
-                    const status = document.getElementById('studentStatus');
-                    status.className = 'file-status error';
-                    status.textContent = '✗ Error reading file: ' + error.message;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        });
+  <div class="collapsible-section">
+    <div class="collapsible-header" id="header1" onclick="toggleSection('body1','header1','toggle1')">
+      <h2>Subject Scores by Student</h2>
+      <span class="count" id="rankCount"></span>
+      <span class="collapse-toggle" id="toggle1">collapse ▲</span>
+    </div>
+    <div class="collapsible-body" id="body1">
+      <div class="table-toolbar">
+        <button class="toggle-subjects-btn" id="subjectsToggle1" onclick="toggleSubjectsList(1)">☰ Show subject list column</button>
+      </div>
+      <div class="table-wrap"><table id="rankTable"></table></div>
+    </div>
+  </div>
 
-        // Step 2: Handle course codes upload
-        document.getElementById('courseFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+  <div class="collapsible-section">
+    <div class="collapsible-header" id="header2" onclick="toggleSection('body2','header2','toggle2')">
+      <h2>Overall Leaderboard</h2>
+      <span class="count" id="boardCount"></span>
+      <span class="collapse-toggle" id="toggle2">collapse ▲</span>
+    </div>
+    <div class="collapsible-body" id="body2">
+      <div class="table-toolbar">
+        <button class="toggle-subjects-btn" id="subjectsToggle2" onclick="toggleSubjectsList(2)">☰ Show subject list column</button>
+      </div>
+      <div class="table-wrap"><table id="leaderTable"></table></div>
+    </div>
+  </div>
 
-            // Show filename
-            const fileNameDisplay = document.getElementById('courseFileName');
-            fileNameDisplay.textContent = `📄 ${file.name}`;
-            fileNameDisplay.classList.add('show');
+  <div class="collapsible-section" id="top30Section" style="display:none">
+    <div class="collapsible-header" id="header3" onclick="toggleSection('body3','header3','toggle3')" style="background:#a07800">
+      <h2>Top 30</h2>
+      <span class="count" id="top30Count"></span>
+      <span class="collapse-toggle" id="toggle3">collapse ▲</span>
+    </div>
+    <div class="collapsible-body" id="body3">
+      <div class="table-wrap" style="border-top:2px solid var(--top30-border)"><table id="top30Table"></table></div>
+    </div>
+  </div>
 
-            Papa.parse(file, {
-                header: true,
-                complete: function(results) {
-                    try {
-                        courseCodes = results.data
-                            .filter(row => row['Course Number'] && row['Course Name'])
-                            .map(row => ({
-                                number: row['Course Number'].trim(),
-                                name: row['Course Name'].trim()
-                            }));
-                        
-                        const status = document.getElementById('courseStatus');
-                        status.className = 'file-status success';
-                        status.textContent = `✓ Loaded ${courseCodes.length} NESA courses`;
-                        
-                        // Mark step complete and activate NESA student upload
-                        document.getElementById('step2').classList.add('complete');
-                        document.getElementById('step3').classList.add('active');
-                        
-                    } catch (error) {
-                        const status = document.getElementById('courseStatus');
-                        status.className = 'file-status error';
-                        status.textContent = '✗ Error reading file: ' + error.message;
-                    }
-                },
-                error: function(error) {
-                    const status = document.getElementById('courseStatus');
-                    status.className = 'file-status error';
-                    status.textContent = '✗ Error parsing CSV: ' + error.message;
-                }
-            });
-        });
+  <details class="debug">
+    <summary>🔍 Debug — raw extracted text</summary>
+    <pre id="rawText"></pre>
+  </details>
+</div>
 
-        // Step 3: Handle NESA student data upload
-        document.getElementById('nesaStudentFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+<footer>RankForge &mdash; Client-side only &mdash; PDF.js &mdash; No data transmitted</footer>
 
-            // Show filename
-            const fileNameDisplay = document.getElementById('nesaStudentFileName');
-            fileNameDisplay.textContent = `📄 ${file.name}`;
-            fileNameDisplay.classList.add('show');
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-            Papa.parse(file, {
-                header: true,
-                complete: function(results) {
-                    try {
-                        nesaStudents = results.data
-                            .filter(row => row['NESA Student Id'] && row['Student Name'])
-                            .map((row, index) => ({
-                                originalIndex: index,
-                                nesaId: row['NESA Student Id'].trim(),
-                                name: row['Student Name'].trim(),
-                                courses: [
-                                    row['Course 1'], row['Course 2'], row['Course 3'], row['Course 4'], row['Course 5'],
-                                    row['Course 6'], row['Course 7'], row['Course 8'], row['Course 9'], row['Course 10']
-                                ].filter(c => c && c.trim())
-                            }));
-                        
-                        const status = document.getElementById('nesaStudentStatus');
-                        status.className = 'file-status success';
-                        status.textContent = `✓ Loaded ${nesaStudents.length} NESA students`;
-                        
-                        // Perform automatic matching
-                        performAutomaticMatching();
-                        
-                        // Show matching interface
-                        document.getElementById('matchingContainer').classList.remove('hidden');
-                        
-                    } catch (error) {
-                        const status = document.getElementById('nesaStudentStatus');
-                        status.className = 'file-status error';
-                        status.textContent = '✗ Error reading file: ' + error.message;
-                    }
-                },
-                error: function(error) {
-                    const status = document.getElementById('nesaStudentStatus');
-                    status.className = 'file-status error';
-                    status.textContent = '✗ Error parsing CSV: ' + error.message;
-                }
-            });
-        });
+// ── State ──────────────────────────────────────────────────────────────────────
+let parsedData=null;
+let lastUploadedFile=null;
+let subjectWeights={};
+let penaltyMode='category';
+let mathsGroups=[];       // [{id,name,codes:[]}]
+let mathsUnassigned=[];   // raw class codes not yet placed
+let dragCode=null;        // code string being dragged
+let dragFromZone=null;    // zone id string
+let groupIdSeq=0;
+const subjectsVisible={1:false,2:false};
+const CAT={easy:0.8,normal:1.0,hard:1.2};
 
-        function performAutomaticMatching() {
-            studentMatching = {};
-            
-            studentData.students.forEach((student, enrolIndex) => {
-                // Parse enrolment name
-                const enrolSurname = student.surname.trim().toLowerCase();
-                const enrolFirstName = student.givenNames.trim().split(/\s+/)[0].toLowerCase(); // Get first word of given names
-                
-                // Try to find match in NESA data
-                const matchIndex = nesaStudents.findIndex(nesaStudent => {
-                    // Parse NESA name (format: "SURNAME, First Name")
-                    const parts = nesaStudent.name.split(',');
-                    if (parts.length !== 2) return false;
-                    
-                    const nesaSurname = parts[0].trim().toLowerCase();
-                    const nesaFirstName = parts[1].trim().split(/\s+/)[0].toLowerCase(); // Get first word
-                    
-                    return nesaSurname === enrolSurname && nesaFirstName === enrolFirstName;
-                });
-                
-                if (matchIndex !== -1) {
-                    studentMatching[enrolIndex] = matchIndex;
-                }
-            });
-            
-            // Generate matching interface
-            generateMatchingInterface();
-        }
+const yearVal=()=>parseInt(document.getElementById('yearSelect').value);
+const isJunior=()=>yearVal()<=10;
 
-        function generateMatchingInterface() {
-            const container = document.getElementById('matchingList');
-            container.innerHTML = '';
-            
-            // Calculate stats
-            const matchedCount = Object.keys(studentMatching).length;
-            const unmatchedCount = studentData.students.length - matchedCount;
-            
-            // Add stats display with toggle button
-            const statsWrapper = document.createElement('div');
-            const stats = document.createElement('div');
-            stats.className = 'match-stats';
-            stats.innerHTML = `
-                <div class="stat-item success">
-                    <div class="stat-number" style="color: #2e7d32;">${matchedCount}</div>
-                    <div class="stat-label">Automatically Matched</div>
-                </div>
-                <div class="stat-item warning">
-                    <div class="stat-number" style="color: #e65100;">${unmatchedCount}</div>
-                    <div class="stat-label">Need Manual Matching</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" style="color: #666;">${studentData.students.length}</div>
-                    <div class="stat-label">Total Students</div>
-                </div>
-            `;
-            statsWrapper.appendChild(stats);
-            
-            // Add toggle button
-            const toggleBtn = document.createElement('button');
-            toggleBtn.textContent = '👁️ Hide Matched Students';
-            toggleBtn.style.marginTop = '10px';
-            toggleBtn.id = 'toggleMatchedBtn';
-            let showMatched = true;
-            
-            toggleBtn.onclick = function() {
-                showMatched = !showMatched;
-                const matchedItems = document.querySelectorAll('.match-item.matched');
-                matchedItems.forEach(item => {
-                    item.style.display = showMatched ? 'grid' : 'none';
-                });
-                toggleBtn.textContent = showMatched ? '👁️ Hide Matched Students' : '👁️ Show Matched Students';
-            };
-            
-            statsWrapper.appendChild(toggleBtn);
-            container.appendChild(statsWrapper);
-            
-            // Sort students: unmatched first, then matched
-            const sortedStudents = studentData.students.map((student, index) => ({
-                student,
-                index,
-                isMatched: studentMatching.hasOwnProperty(index)
-            })).sort((a, b) => {
-                // Unmatched (false) comes before matched (true)
-                if (a.isMatched === b.isMatched) return 0;
-                return a.isMatched ? 1 : -1;
-            });
-            
-            // Generate matching items for each student
-            sortedStudents.forEach(({ student, index: enrolIndex, isMatched }) => {
-                const item = document.createElement('div');
-                item.className = `match-item ${isMatched ? 'matched' : 'unmatched'}`;
-                
-                const enrolName = `${student.surname}, ${student.givenNames}`;
-                const enrolId = student.studentId;
-                
-                // Left column: Enrolment data
-                const leftCol = document.createElement('div');
-                leftCol.className = 'match-column';
-                leftCol.innerHTML = `
-                    <div class="match-label">Enrolment File</div>
-                    <div class="match-value"><strong>${enrolName}</strong></div>
-                    <div class="match-value" style="font-size: 12px; color: #666;">ID: ${enrolId}</div>
-                `;
-                
-                // Arrow
-                const arrow = document.createElement('div');
-                arrow.className = `match-arrow ${isMatched ? '' : 'unmatched'}`;
-                arrow.textContent = isMatched ? '✓ →' : '? →';
-                
-                // Right column: NESA match dropdown
-                const rightCol = document.createElement('div');
-                rightCol.className = 'match-column';
-                rightCol.innerHTML = `<div class="match-label">NESA Student</div>`;
-                
-                const select = document.createElement('select');
-                select.className = 'match-select';
-                select.id = `match_${enrolIndex}`;
-                
-                // Add "No match" option
-                const noMatchOption = document.createElement('option');
-                noMatchOption.value = '';
-                noMatchOption.textContent = '-- No NESA match --';
-                select.appendChild(noMatchOption);
-                
-                // Add all NESA students as options
-                nesaStudents.forEach((nesaStudent, nesaIndex) => {
-                    const option = document.createElement('option');
-                    option.value = nesaIndex;
-                    option.textContent = `${nesaStudent.name} (${nesaStudent.nesaId})`;
-                    if (isMatched && studentMatching[enrolIndex] === nesaIndex) {
-                        option.selected = true;
-                    }
-                    select.appendChild(option);
-                });
-                
-                // Update matching when selection changes
-                select.addEventListener('change', function() {
-                    if (this.value === '') {
-                        delete studentMatching[enrolIndex];
-                        item.className = 'match-item unmatched';
-                        arrow.className = 'match-arrow unmatched';
-                        arrow.textContent = '? →';
-                    } else {
-                        studentMatching[enrolIndex] = parseInt(this.value);
-                        item.className = 'match-item matched';
-                        arrow.className = 'match-arrow';
-                        arrow.textContent = '✓ →';
-                    }
-                    // Update stats
-                    generateMatchingInterface();
-                });
-                
-                rightCol.appendChild(select);
-                
-                // Status column
-                const statusCol = document.createElement('div');
-                statusCol.className = 'match-column';
-                if (isMatched) {
-                    const nesaStudent = nesaStudents[studentMatching[enrolIndex]];
-                    statusCol.innerHTML = `
-                        <div class="match-value" style="color: #2e7d32; font-weight: 600;">✓ Matched</div>
-                        <div class="match-value" style="font-size: 11px; color: #666;">NESA ID: ${nesaStudent.nesaId}</div>
-                    `;
-                } else {
-                    statusCol.innerHTML = `
-                        <div class="match-value" style="color: #e65100; font-weight: 600;">⚠ Needs Review</div>
-                        <div class="match-value" style="font-size: 11px; color: #666;">Select NESA student</div>
-                    `;
-                }
-                
-                item.appendChild(leftCol);
-                item.appendChild(arrow);
-                item.appendChild(rightCol);
-                item.appendChild(statusCol);
-                container.appendChild(item);
-            });
-        }
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function eH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function eA(s){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function togglePanel(h){const b=h.nextElementSibling;b.classList.toggle('open');h.classList.toggle('open')}
+function toggleSection(bi,hi,ti){const b=document.getElementById(bi),h=document.getElementById(hi),t=document.getElementById(ti);const c=b.classList.contains('hidden');b.classList.toggle('hidden');h.classList.toggle('collapsed',!c);t.textContent=c?'collapse ▲':'expand ▼'}
+function toggleSubjectsList(n){
+  subjectsVisible[n]=!subjectsVisible[n];const v=subjectsVisible[n];
+  const btn=document.getElementById('subjectsToggle'+n);btn.textContent=v?'☰ Hide subject list column':'☰ Show subject list column';btn.classList.toggle('active',v);
+  document.getElementById(n===1?'rankTable':'leaderTable').querySelectorAll('.col-subjects-list').forEach(el=>el.classList.toggle('hide',!v));
+}
+function setStatus(m,t=''){const e=document.getElementById('status');e.textContent=m;e.className=t}
+function setProgress(p){const b=document.getElementById('progressBar'),f=document.getElementById('progressFill');if(p===null){b.classList.remove('visible');return}b.classList.add('visible');f.style.width=p+'%'}
 
-        function confirmMatching() {
-            // Mark step complete and activate class mapping
-            document.getElementById('step3').classList.add('complete');
-            document.getElementById('step4').classList.add('active');
-            
-            // Generate mapping interface
-            generateMappingInterface();
-            
-            // Scroll to mapping section
-            document.getElementById('step4').scrollIntoView({ behavior: 'smooth' });
-        }
+function onScoreModeChange(){
+  const p=document.getElementById('scoreMode').value==='percent';
+  document.getElementById('rankKeyLabel').textContent=p?'Score search keys':'Score search keys';
+  const inp=document.getElementById('rankKey');
+  inp.placeholder=p?'Key 1 (e.g. Assessment Mark)':'Key 1 (e.g. Overall Assessment Rank)';
+  if(p&&inp.value==='Overall Assessment Rank')inp.value='Assessment Mark';
+  if(!p&&inp.value==='Assessment Mark')inp.value='Overall Assessment Rank';
+}
 
-        function performAutomaticClassMapping() {
-            
-                const year10Selected = document.getElementById('year10').checked;
-                const year11Selected = document.getElementById('year11').checked;
-            
-                const mappingHints = {
-                    'MMA': ['mathematics advanced', 'advanced mathematics'],
-                    'MMS': ['mathematics standard', 'standard mathematics'],
-                    'MMX': ['mathematics extension', 'extension mathematics'],
-                    'MXX': ['extension 2 mathematics', 'mathematics extension 2'],
-            
-                    'EEN': ['english', 'standard english', 'advanced english'],
-                    'ENA': ['advanced english', 'english advanced'],
-                    'ENS': ['standard english', 'english standard'],
-                    'ENX': ['english extension', 'extension english'],
-                    'EXX': ['extension 2 english', 'english extension 2'],
-                    'ESL': ['english esl', 'esl'],
-                    'EDR': ['drama'],
-                    'DRA': ['drama'],
-            
-                    'SPH': ['physics'],
-                    'SCH': ['chemistry'],
-                    'SBI': ['biology'],
-                    'SSC': ['science'],
-                    'SEE': ['earth and environmental science', 'earth environmental'],
-                    'SIS': ['investigating science'],
-            
-                    'HBS': ['business studies'],
-                    'HLS': ['legal studies'],
-                    'HAH': ['ancient history'],
-                    'HMH': ['modern history', 'history'],
-                    'HGE': ['geography'],
-                    'HEC': ['economics'],
-                    'HSC': ['society and culture'],
-                    'HWS': ['work studies'],
-            
-                    'CVA': ['visual arts', 'art'],
-                    'CMU': ['music'],
-                    'CDA': ['dance'],
-                    'CDR': ['drama'],
-            
-                    'TDT': ['design and technology'],
-                    'TFT': ['food technology'],
-                    'TTI': ['industrial technology'],
-                    'TTD': ['textiles and design'],
-                    'TSW': ['software design', 'software'],
-                    'TIM': ['industrial technology'],
-                    'TMM': ['industrial technology'],
-                    'TAG': ['agriculture'],
-                    'TES': ['engineering studies'],
-            
-                    'PSP': ['sport lifestyle', 'sports'],
-                    'PDA': ['dance'],
-            
-                    'LFB': ['french beginners'],
-                    'LFC': ['french continuers'],
-                    'LSB': ['spanish beginners'],
-                    'LSC': ['spanish continuers'],
-                    'LJB': ['japanese beginners'],
-                    'LJC': ['japanese continuers'],
+// ── Upload ─────────────────────────────────────────────────────────────────────
+const zone=document.getElementById('uploadZone'),fileInput=document.getElementById('fileInput');
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over')});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f&&f.type==='application/pdf')handleFile(f);else setStatus('Please drop a PDF file.','error')});
+fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
 
-                };
-            
-                window.autoMappings = {};
-            
-                uniqueClasses.forEach(className => {
-            
-                    const classUpper = className.toUpperCase();
-            
-                    if ((classUpper === 'MMX' || classUpper === 'ENX') && year10Selected) {
-                        return;
-                    }
-            
-                    const hints = mappingHints[classUpper];
-                    if (!hints) return;
-            
-                    let potentialMatches = [];
-            
-                    courseCodes.forEach(course => {
-                        const courseName = course.name.toLowerCase();
-                        let score = 0;
-            
-                        hints.forEach(hint => {
-                            if (courseName.includes(hint.toLowerCase())) {
-                                score += hint.length;
-                            }
-                        });
-            
-                        if (score > 0) {
-                            potentialMatches.push({
-                                course: course,
-                                score: score
-                            });
-                        }
-                    });
-            
-                    if (potentialMatches.length === 0) return;
-            
-                    let bestMatch = null;
-            
-                    // YEAR 10: Prefer 200-hour
-                    if (year10Selected) {
-            
-                        const matches200 = potentialMatches.filter(m =>
-                            parseInt(m.course.hours) === 200
-                        );
-            
-                        const pool = matches200.length > 0 ? matches200 : potentialMatches;
-            
-                        pool.sort((a, b) => b.score - a.score);
-                        bestMatch = pool[0].course.number;
-                    }
-            
-                    // YEAR 11: Prefer non-Life Skills
-                    else if (year11Selected) {
-            
-                        const nonLifeSkills = potentialMatches.filter(m =>
-                            !m.course.name.toLowerCase().includes('life skills')
-                        );
-            
-                        const lifeSkills = potentialMatches.filter(m =>
-                            m.course.name.toLowerCase().includes('life skills')
-                        );
-            
-                        if (nonLifeSkills.length > 0) {
-                            nonLifeSkills.sort((a, b) => b.score - a.score);
-                            bestMatch = nonLifeSkills[0].course.number;
-                        } else {
-                            lifeSkills.sort((a, b) => b.score - a.score);
-                            bestMatch = lifeSkills[0].course.number;
-                        }
-                    }
-            
-                    if (bestMatch) {
-                        window.autoMappings[className] = bestMatch;
-                    }
-                });
-            }
+async function handleFile(file){
+  lastUploadedFile=file;
+  setStatus('Loading PDF…');setProgress(5);
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  const n=pdf.numPages;let full='';
+  for(let i=1;i<=n;i++){
+    const pg=await pdf.getPage(i);const ct=await pg.getTextContent();
+    const items=ct.items.slice().sort((a,b)=>{const dy=b.transform[5]-a.transform[5];return Math.abs(dy)>3?dy:a.transform[4]-b.transform[4]});
+    const lines=[];let lastY=null,line=[];
+    for(const it of items){const y=Math.round(it.transform[5]);if(lastY!==null&&Math.abs(y-lastY)>3){if(line.length)lines.push(line.join(' '));line=[]}if(it.str.trim())line.push(it.str.trim());lastY=y}
+    if(line.length)lines.push(line.join(' '));
+    full+=lines.join('\n')+'\n--- PAGE BREAK ---\n';
+    setProgress(5+Math.round(i/n*60));
+  }
+  document.getElementById('rawText').textContent=full;
+  setProgress(70);setStatus('Parsing…');
+  const yr=document.getElementById('yearSelect').value;
+  const keys=['rankKey','rankKey2','rankKey3','rankKey4']
+    .map(id=>document.getElementById(id).value.trim()).filter(Boolean);
+  if(!keys.length)keys.push('Overall Assessment Rank');
+  const mode=document.getElementById('scoreMode').value;
+  parsedData=parseText(full,yr,keys,mode);
+  setProgress(90);
+  if(!parsedData.students.length){setStatus('No student data found. Check the debug panel.','error');document.getElementById('results').classList.add('visible');setProgress(null);return}
 
+  subjectWeights={};
+  parsedData.allSubjects.forEach(s=>{subjectWeights[s]=1.0});
 
-        function rerunAutoMapping() {
-            // Clear previous auto-mappings
-            window.autoMappings = {};
-            
-            // Re-run the auto-mapping with new year level
-            performAutomaticClassMapping();
-            
-            // Update all the dropdowns with new mappings
-            uniqueClasses.forEach(className => {
-                const select = document.getElementById(`mapping_${className}`);
-                if (!select) return;
-                
-                // Reset to default first
-                select.value = '';
-                
-                // Apply new auto-mapping if it exists
-                if (window.autoMappings && window.autoMappings[className]) {
-                    select.value = window.autoMappings[className];
-                }
-            });
-            
-            // Update the info message
-            const container = document.getElementById('mappingContainer');
-            const existingInfo = container.querySelector('.info-box');
-            if (existingInfo) {
-                const autoMappedCount = uniqueClasses.filter(className => {
-                    return window.autoMappings && window.autoMappings[className];
-                }).length;
-                
-                if (autoMappedCount > 0) {
-                    existingInfo.innerHTML = `✓ Automatically pre-selected ${autoMappedCount} of ${uniqueClasses.length} class mappings based on course names. Please review and adjust as needed.`;
-                } else {
-                    existingInfo.remove();
-                }
-            }
-        }
+  mathsGroups=[];mathsUnassigned=[];
+  if(isJunior()&&parsedData.mathsCodes.size){
+    mathsUnassigned=[];
+    const allMathsCodes=[...parsedData.mathsCodes].sort();
+    mathsGroups=[{id:++groupIdSeq,name:'Group 1',codes:allMathsCodes},{id:++groupIdSeq,name:'Group 2',codes:[]},{id:++groupIdSeq,name:'Group 3',codes:[]}];
+  }
 
-        function processStudentData(jsonData) {
-            const headers = jsonData[0];
-            const students = [];
-            
-            // Find column indices
-            const surnameIdx = headers.findIndex(h => h && h.toLowerCase().includes('surname'));
-            const givenNameIdx = headers.findIndex(h => h && h.toLowerCase().includes('given'));
-            const studentIdIdx = headers.findIndex(h => h && h.toLowerCase().includes('student id'));
-            
-            // Find class columns (skip attendance columns)
-            const classColumns = [];
-            for (let i = 0; i < headers.length; i++) {
-                const header = headers[i];
-                if (header && header.toLowerCase().includes('class') && !header.toLowerCase().includes('attendance')) {
-                    classColumns.push(i);
-                }
-            }
-            
-            // Process each student row
-            for (let i = 1; i < jsonData.length; i++) {
-                const row = jsonData[i];
-                if (!row[surnameIdx]) continue; // Skip empty rows
-                
-                const student = {
-                    surname: row[surnameIdx] || '',
-                    givenNames: row[givenNameIdx] || '',
-                    studentId: row[studentIdIdx] || '',
-                    classes: []
-                };
-                
-                // Extract classes (max 12)
-                for (let j = 0; j < Math.min(classColumns.length, 12); j++) {
-                    const classValue = row[classColumns[j]];
-                    if (classValue && classValue.toString().trim()) {
-                        student.classes.push(classValue.toString().trim());
-                    }
-                }
-                
-                students.push(student);
-            }
-            
-            return { students, maxClasses: 12 };
-        }
+  subjectsVisible[1]=false;subjectsVisible[2]=false;
+  ['subjectsToggle1','subjectsToggle2'].forEach(id=>{const b=document.getElementById(id);b.classList.remove('active');b.textContent='☰ Show subject list column'});
 
-        function extractUniqueClasses(studentData) {
-            const classSet = new Set();
-            
-            studentData.students.forEach(student => {
-                student.classes.forEach(className => {
-                    // Remove numbers to get unique class code
-                    const cleanedClass = className.replace(/\d+/g, '');
-                    if (cleanedClass) {
-                        classSet.add(cleanedClass);
-                    }
-                });
-            });
-            
-            return Array.from(classSet).sort();
-        }
+  document.getElementById('top30Section').style.display=isJunior()?'':'none';
+  buildPenaltyPanel();
+  renderTables();
+  setProgress(null);
+  setStatus(`✓ Found ${parsedData.students.length} students across ${parsedData.allSubjects.length} raw subjects.`,'success');
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('uploadZone').style.display='none';
+}
 
-        function generateMappingInterface() {
-            const container = document.getElementById('mappingContainer');
-            container.innerHTML = '';
-        
-            manuallyOverriddenClasses = new Set();
-            deletedClasses = new Set();
-        
-            performAutomaticClassMapping();
-        
-            uniqueClasses.forEach(className => {
-                const item = document.createElement('div');
-                item.className = 'mapping-item';
-                item.id = `item_${className}`;
-        
-                const label = document.createElement('div');
-                label.className = 'mapping-label';
-                label.textContent = className;
-        
-                const select = document.createElement('select');
-                select.className = 'mapping-select';
-                select.id = `mapping_${className}`;
-        
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = '-- Unmapped --';
-                select.appendChild(defaultOption);
-        
-                courseCodes.forEach(course => {
-                    const option = document.createElement('option');
-                    option.value = course.number;
-                    option.textContent = `${course.name} (${course.number})`;
-                    if (window.autoMappings && window.autoMappings[className] === course.number) {
-                        option.selected = true;
-                    }
-                    select.appendChild(option);
-                });
-        
-                const deleteWrapper = document.createElement('label');
-                deleteWrapper.style.marginLeft = '15px';
-                deleteWrapper.style.display = 'flex';
-                deleteWrapper.style.alignItems = 'center';
-        
-                const deleteCheckbox = document.createElement('input');
-                deleteCheckbox.type = 'checkbox';
-                deleteCheckbox.id = `delete_${className}`;
-                deleteCheckbox.style.marginRight = '5px';
-        
-                deleteWrapper.appendChild(deleteCheckbox);
-                deleteWrapper.appendChild(document.createTextNode('Delete'));
-        
-                const manualInput = document.createElement('input');
-                manualInput.type = 'text';
-                manualInput.placeholder = 'Manual course code';
-                manualInput.id = `manual_${className}`;
-                manualInput.style.marginLeft = '15px';
-                manualInput.style.padding = '8px';
-                manualInput.style.borderRadius = '6px';
-                manualInput.style.border = '2px solid #ddd';
-                manualInput.style.width = '180px';
-        
-                function updateState() {
-                    if (deleteCheckbox.checked) {
-                        item.style.background = '#ffebee';
-                        deletedClasses.add(className);
-                        manuallyOverriddenClasses.delete(className);
-                        select.value = '';
-                        manualInput.value = '';
-                    } else if (manualInput.value.trim()) {
-                        item.style.background = '#e8f5e9';
-                        manuallyOverriddenClasses.add(className);
-                        deletedClasses.delete(className);
-                        select.value = '';
-                    } else if (select.value) {
-                        item.style.background = '#e8f5e9';
-                        deletedClasses.delete(className);
-                        manuallyOverriddenClasses.delete(className);
-                    } else {
-                        item.style.background = '#fff3e0';
-                        deletedClasses.delete(className);
-                        manuallyOverriddenClasses.delete(className);
-                    }
-                }
-        
-                select.addEventListener('change', updateState);
-                deleteCheckbox.addEventListener('change', updateState);
-                manualInput.addEventListener('input', updateState);
-        
-                updateState();
-        
-                item.appendChild(label);
-                item.appendChild(select);
-                item.appendChild(deleteWrapper);
-                item.appendChild(manualInput);
-        
-                container.appendChild(item);
-            });
-        
-            document.getElementById('generateBtn').disabled = false;
-        }
+// ── Parser ─────────────────────────────────────────────────────────────────────
+// Class code: 1-2 digit year number + 2+ letters + alphanumeric tail
+// This is the key fix: match \b\d{1,2}[A-Z]{2,}[\dA-Z]* at WORD boundary so SIT10216 doesn't match
+function parseText(text,year,rankKeys,scoreMode){
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const studentRe=/^([A-Z][A-Z'\-]+(?:\s+[A-Z][A-Z'\-]+)*,\s+[A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]*)*)\s+Semester\b/;
 
+  const ey=year.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const subjectCodeRe=new RegExp(`^(.*?)\\s+(${ey}[A-Z]{2,}[\\dA-Z]*)(?:\\s|$)`);
 
-        function generateOutput() {
-            
-                classMapping = {};
-            
-                uniqueClasses.forEach(className => {
-                    const select = document.getElementById(`mapping_${className}`);
-                    const manualInput = document.getElementById(`manual_${className}`);
-                    const deleteCheckbox = document.getElementById(`delete_${className}`);
-            
-                    if (deleteCheckbox && deleteCheckbox.checked) {
-                        classMapping[className] = '';
-                    } else if (manualInput && manualInput.value.trim()) {
-                        classMapping[className] = manualInput.value.trim();
-                    } else if (select && select.value) {
-                        classMapping[className] = select.value;
-                    } else {
-                        classMapping[className] = className;
-                    }
-                });
-            
-                const outputData = [];
-                const unmappedClasses = new Set();
-                const unmatchedStudents = [];
-            
-                const headers = [
-                    'NESA Student ID',
-                    'Student Name (NESA)',
-                    'Surname (Enrolment)',
-                    'Given Names (Enrolment)',
-                    'Student ID (Enrolment)'
-                ];
-            
-                for (let i = 1; i <= studentData.maxClasses; i++) {
-                    headers.push(`Class ${i}`);
-                }
-            
-                outputData.push(headers);
-            
-                studentData.students.forEach((student, enrolIndex) => {
-                    const row = [];
-            
-                    if (studentMatching.hasOwnProperty(enrolIndex)) {
-                        const nesaStudent = nesaStudents[studentMatching[enrolIndex]];
-                        row.push(nesaStudent.nesaId);
-                        row.push(nesaStudent.name);
-                    } else {
-                        row.push('');
-                        row.push('');
-                        unmatchedStudents.push(`${student.surname}, ${student.givenNames}`);
-                    }
-            
-                    row.push(student.surname);
-                    row.push(student.givenNames);
-                    row.push(student.studentId);
-            
-                    for (let i = 0; i < studentData.maxClasses; i++) {
-                        if (i < student.classes.length) {
-                            const originalClass = student.classes[i];
-                            const cleanedClass = originalClass.replace(/\d+/g, '');
-                            const mappedValue = classMapping[cleanedClass];
-            
-                            if (!mappedValue) {
-                                row.push('');
-                            } else {
-                                row.push(mappedValue);
-                                if (mappedValue === cleanedClass) {
-                                    unmappedClasses.add(cleanedClass);
-                                }
-                            }
-                        } else {
-                            row.push('');
-                        }
-                    }
-            
-                    outputData.push(row);
-                });
-            
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(outputData);
-                XLSX.utils.book_append_sheet(wb, ws, 'Mapped Students');
-            
-                XLSX.writeFile(wb, 'NESA_Mapped_Students.csv', { bookType: 'csv' });
-            
-                document.getElementById('step4').classList.add('complete');
-                document.getElementById('step5').classList.add('active');
-            
-                const outputContainer = document.getElementById('outputContainer');
-            
-                let message = '<div class="info-box">✓ Output CSV generated successfully!</div>';
-            
-                if (unmatchedStudents.length > 0) {
-                    message += '<div class="unmapped-list"><h4>⚠️ Unmatched Students</h4><ul>';
-                    unmatchedStudents.forEach(s => message += `<li>${s}</li>`);
-                    message += '</ul></div>';
-                }
-            
-                if (unmappedClasses.size > 0) {
-                    message += '<div class="unmapped-list"><h4>⚠️ Unmapped Classes</h4><ul>';
-                    Array.from(unmappedClasses).forEach(c => message += `<li>${c}</li>`);
-                    message += '</ul></div>';
-                }
-            
-                if (manuallyOverriddenClasses.size > 0) {
-                    message += '<div class="unmapped-list"><h4>✏️ Manually Overridden Classes</h4><ul>';
-                    Array.from(manuallyOverriddenClasses).forEach(c => {
-                        message += `<li>${c} → ${classMapping[c]}</li>`;
-                    });
-                    message += '</ul></div>';
-                }
-            
-                if (deletedClasses.size > 0) {
-                    message += '<div class="unmapped-list"><h4>🗑 Deleted Classes</h4><ul>';
-                    Array.from(deletedClasses).forEach(c => {
-                        message += `<li>${c}</li>`;
-                    });
-                    message += '</ul></div>';
-                }
-            
-                message += '<button onclick="location.reload()">Start New Mapping</button>';
-                outputContainer.innerHTML = message;
-            }
+  // Value patterns used after the key is located by findValue/matchAny
+  const rankPat=/^[:\s]+(\d+)\s*\/\s*(\d+)/i;
+  const pctPat =/^[:\s]+(\d+(?:\.\d+)?)\s*%/i;
+  // Find the key in the line, but only accept it if the token immediately before it
+  // (skipping spaces) is NOT an alphabetic word — so "Median Assessment Mark" is
+  // ignored when the key is "Assessment Mark", regardless of order on the line.
+  function findValue(line,key,valuePat){
+    const kl=key.toLowerCase(),ll=line.toLowerCase();
+    let start=0;
+    while(true){
+      const pos=ll.indexOf(kl,start);
+      if(pos===-1)break;
+      // Walk back past spaces to find preceding non-space char
+      let look=pos-1;
+      while(look>=0&&line[look]===' ')look--;
+      // If preceding non-space char is alphabetic this is a qualifier prefix — skip
+      if(look>=0&&/[A-Za-z]/.test(line[look])){start=pos+1;continue}
+      // Try to match the value pattern immediately after the key
+      const segment=line.slice(pos+key.length);
+      const m=segment.match(valuePat);
+      if(m)return m;
+      start=pos+1;
+    }
+    return null;
+  }
+  function matchAny(keys,valuePat,line){
+    for(const key of keys){const m=findValue(line,key,valuePat);if(m)return m;}
+    return null;
+  }
 
-    </script>
+  // G&T: class code ends with T, X, TR, or TG (before optional trailing digits)
+  // Only relevant for years 7-10
+  const juniorYear=parseInt(year)<=10;
+  const gtCodeRe=/(?:TR|TG|T|X)\d*$/i;
+  // Maths: code contains MMA
+  const mathsCodeRe=new RegExp(`^${ey}MMA`,'i');
+
+  const students=[];
+  let cur=null,pendName=null,pendCode=null;
+  const mathsCodesSet=new Set();
+  // subjectRegistry: name -> {isGT, baseName}
+  const subjectRegistry={};
+
+  for(const line of lines){
+    if(line.includes('--- PAGE BREAK ---'))continue;
+
+    const sm=line.match(studentRe);
+    if(sm){cur={name:sm[1].trim(),subjects:[],mathsCode:null};students.push(cur);pendName=null;pendCode=null;continue}
+    if(!cur)continue;
+
+    if(scoreMode==='percent'){
+      const pm=matchAny(rankKeys,pctPat,line);
+      if(pm&&pendName){
+        const isGT=juniorYear&&pendCode?gtCodeRe.test(pendCode):false;
+        const effName=isGT?pendName+' (G&T)':pendName;
+        cur.subjects.push({name:effName,code:pendCode,score:parseFloat(pm[1]),isGT});
+        if(!(effName in subjectRegistry))subjectRegistry[effName]={isGT,baseName:pendName};
+        if(pendCode&&mathsCodeRe.test(pendCode)){mathsCodesSet.add(pendCode);cur.mathsCode=pendCode}
+        pendName=null;pendCode=null;continue;
+      }
+    } else {
+      const rm=matchAny(rankKeys,rankPat,line);
+      if(rm&&pendName){
+        const isGT=juniorYear&&pendCode?gtCodeRe.test(pendCode):false;
+        const effName=isGT?pendName+' (G&T)':pendName;
+        cur.subjects.push({name:effName,code:pendCode,rank:parseInt(rm[1]),total:parseInt(rm[2]),isGT});
+        if(!(effName in subjectRegistry))subjectRegistry[effName]={isGT,baseName:pendName};
+        if(pendCode&&mathsCodeRe.test(pendCode)){mathsCodesSet.add(pendCode);cur.mathsCode=pendCode}
+        pendName=null;pendCode=null;continue;
+      }
+    }
+
+    const scm=line.match(subjectCodeRe);
+    if(scm){
+      pendName=scm[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/,'').trim();
+      pendCode=scm[2]||null;
+    }
+  }
+
+  const subjectSet=new Set();
+  students.forEach(s=>s.subjects.forEach(sub=>subjectSet.add(sub.name)));
+  // Exclude raw maths subject names — they'll appear via groups
+  const mathsBaseNames=new Set();
+  if(juniorYear){
+    students.forEach(st=>{
+      if(st.mathsCode){
+        st.subjects.filter(s=>mathsCodeRe.test(s.code||'')).forEach(s=>mathsBaseNames.add(s.name));
+      }
+    });
+  }
+  const allSubjects=[...subjectSet].filter(s=>!mathsBaseNames.has(s)).sort();
+
+  return{students,allSubjects,mathsCodes:mathsCodesSet,subjectRegistry,scoreMode};
+}
+
+// ── Z-scores ───────────────────────────────────────────────────────────────────
+function computeZScores(students,subjects){
+  const stats={};
+  subjects.forEach(subj=>{
+    const scores=students.map(st=>{const s=st.subjects.find(x=>x.name===subj);return s!=null?s.score:null}).filter(v=>v!==null);
+    if(!scores.length){stats[subj]={mean:0,sd:1};return}
+    const mean=scores.reduce((a,b)=>a+b,0)/scores.length;
+    const sd=Math.sqrt(scores.reduce((a,b)=>a+(b-mean)**2,0)/scores.length)||1;
+    stats[subj]={mean,sd};
+  });
+  return students.map(st=>({...st,subjects:st.subjects.map(s=>({...s,z:stats[s.name]?(s.score-stats[s.name].mean)/stats[s.name].sd:0}))}));
+}
+
+// ── Maths group resolution ─────────────────────────────────────────────────────
+// Returns the group name for this code, or null if unassigned
+function resolvedMathsName(studentMathsCode){
+  if(!studentMathsCode)return null;
+  const grp=mathsGroups.find(g=>g.codes.includes(studentMathsCode));
+  return grp?'Maths: '+grp.name:null;  // null = unassigned, will show — in table
+}
+
+// Effective subjects: allSubjects + group names only for groups that have ≥1 code
+function getEffectiveSubjects(){
+  const base=parsedData.allSubjects.slice();
+  const mathsNames=new Set();
+  if(isJunior()&&parsedData.mathsCodes.size){
+    // Only emit group names for groups that actually have codes assigned
+    mathsGroups.forEach(g=>{if(g.codes.length)mathsNames.add('Maths: '+g.name)});
+  }
+  return [...base,...[...mathsNames].sort()];
+}
+
+// Per-student map: effectiveSubjectName -> subject entry
+// Unassigned maths students get no maths entry (shows — in table)
+function buildSubMap(st){
+  const m={};
+  st.subjects.forEach(s=>{
+    const isMaths=parsedData.mathsCodes.size&&s.code&&/MMA/i.test(s.code);
+    if(isJunior()&&isMaths){
+      const mn=resolvedMathsName(st.mathsCode);
+      if(mn)m[mn]=s;  // only add if assigned to a group
+    } else {
+      m[s.name]=s;
+    }
+  });
+  return m;
+}
+
+// ── Compute avg ────────────────────────────────────────────────────────────────
+function computeAvg(st,effSubjects,isPercent){
+  const sm=buildSubMap(st);
+  const entries=effSubjects.map(subj=>sm[subj]).filter(Boolean);
+  if(!entries.length)return null;
+  if(isPercent){
+    let ws=0,wt=0;
+    entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws+=s.z*w;wt+=w});
+    return wt>0?ws/wt:null;
+  }
+  return entries.reduce((a,s)=>a+s.rank,0)/entries.length;
+}
+
+// ── Build penalty panel ────────────────────────────────────────────────────────
+function buildPenaltyPanel(){
+  const isPercent=parsedData.scoreMode==='percent';
+  const show=isPercent||isJunior()&&parsedData.mathsCodes.size;
+  document.getElementById('penaltyPanel').style.display=show?'':'none';
+  if(!show)return;
+
+  const effSubjects=getEffectiveSubjects();
+
+  let html='';
+
+  if(isPercent){
+    html+=`<div class="penalty-controls">
+      <span class="penalty-mode-label">Difficulty mode:</span>
+      <div class="seg-control">
+        <button class="${penaltyMode==='category'?'active':''}" onclick="setPenaltyMode('category')">Easy / Normal / Hard</button>
+        <button class="${penaltyMode==='multiplier'?'active':''}" onclick="setPenaltyMode('multiplier')">Custom multiplier</button>
+      </div>
+      <div id="catLegend" class="category-legend" style="${penaltyMode==='multiplier'?'display:none':''}">
+        <span class="cat-badge easy">Easy ×0.8</span><span class="cat-badge normal">Normal ×1.0</span><span class="cat-badge hard">Hard ×1.2</span>
+      </div>
+    </div>`;
+
+    const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
+    // Regular = non-GT subjects + assigned maths group names
+    const reg=effSubjects.filter(s=>!isGT(s));
+    const gt=effSubjects.filter(s=>isGT(s));
+
+    if(reg.length){
+      html+='<div class="penalty-section-label">Regular subjects</div><div class="penalty-grid">';
+      reg.forEach(s=>{html+=penaltyRowHTML(s,false)});
+      html+='</div>';
+    }
+    if(gt.length){
+      html+=`<div class="penalty-section-label">Gifted &amp; Talented classes
+        <button class="apply-all-btn" onclick="showApplyAllGT()">Apply same weight to all G&amp;T</button>
+      </div>
+      <div id="applyAllGTRow" style="display:none">
+        <div class="apply-all-row">
+          <label>Set all G&amp;T to:</label>
+          <select id="applyAllCat" style="${penaltyMode==='multiplier'?'display:none':''}">
+            <option value="easy">Easy ×0.8</option><option value="normal" selected>Normal ×1.0</option><option value="hard">Hard ×1.2</option>
+          </select>
+          <input type="number" id="applyAllMult" min="0" max="5" step="0.05" value="1.00" style="${penaltyMode==='category'?'display:none':''}"/>
+          <button onclick="doApplyAllGT()">Apply</button>
+        </div>
+      </div>
+      <div class="penalty-grid" id="gtPenaltyGrid">`;
+      gt.forEach(s=>{html+=penaltyRowHTML(s,true)});
+      html+='</div>';
+    }
+    html+=`<button class="penalty-apply-btn" onclick="applyWeights()">Apply weights &amp; re-rank</button>`;
+  }
+
+  // Maths grouping section
+  if(isJunior()&&parsedData.mathsCodes.size){
+    html+=`<div class="penalty-section-label" style="margin-top:${isPercent?'1.5rem':'0'}">Maths class grouping</div>
+    <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">
+      Drag maths class codes into groups. Each group becomes a separate course column that can be weighted independently.
+      <strong>Click a group name to rename it inline.</strong> Students whose maths code isn't assigned to a group will show <em>—</em> in the maths column until assigned.
+    </p>
+    <div class="maths-group-controls">
+      <button class="add-group-btn" onclick="addMathsGroup()">+ Add group</button>
+    </div>
+    <div class="maths-groups-container" id="mathsGroupsContainer"></div>
+    <button class="penalty-apply-btn" style="margin-top:.75rem" onclick="buildPenaltyPanel();renderTables()">Apply grouping &amp; re-render</button>`;
+  }
+
+  document.getElementById('penaltyBody').innerHTML=html;
+  if(isJunior()&&parsedData.mathsCodes.size)renderMathsGroups();
+}
+
+function penaltyRowHTML(subj,isGT){
+  const w=subjectWeights[subj]??1.0;
+  const rowStyle=wStyle(w);
+  const gtTag=isGT?'<span class="gt-badge">G&T</span>':'';
+  if(penaltyMode==='category'){
+    const cat=catFromW(w);
+    return`<div class="penalty-row" style="${rowStyle}">
+      <span class="penalty-subject-name">${eH(subj)}</span>${gtTag}
+      <select class="cat-select" onchange="onCatChange(this,'${eA(subj)}')">
+        <option value="easy"${cat==='easy'?' selected':''}>Easy</option>
+        <option value="normal"${cat==='normal'?' selected':''}>Normal</option>
+        <option value="hard"${cat==='hard'?' selected':''}>Hard</option>
+      </select></div>`;
+  }
+  return`<div class="penalty-row">
+    <span class="penalty-subject-name">${eH(subj)}</span>${gtTag}
+    <input type="number" min="0" max="5" step="0.05" value="${w.toFixed(2)}" onchange="onMultChange(this,'${eA(subj)}')"/></div>`;
+}
+
+function catFromW(w){return w<=0.85?'easy':w>=1.15?'hard':'normal'}
+function wStyle(w){return w<1?'border-color:#a8d0a8;background:#e8f4e8':w>1?'border-color:#a8b8d8;background:#e8eef8':''}
+function onCatChange(sel,subj){subjectWeights[subj]=CAT[sel.value];sel.closest('.penalty-row').style.cssText=wStyle(CAT[sel.value])}
+function onMultChange(inp,subj){subjectWeights[subj]=parseFloat(inp.value)||1.0}
+function setPenaltyMode(m){penaltyMode=m;if(parsedData)buildPenaltyPanel()}
+function applyWeights(){if(parsedData)renderTables()}
+
+function showApplyAllGT(){
+  const row=document.getElementById('applyAllGTRow');
+  row.style.display=row.style.display==='none'?'':'none';
+}
+function doApplyAllGT(){
+  const isPercent=parsedData.scoreMode==='percent';
+  const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
+  let w;
+  if(penaltyMode==='category'){w=CAT[document.getElementById('applyAllCat').value]}
+  else{w=parseFloat(document.getElementById('applyAllMult').value)||1.0}
+  parsedData.allSubjects.filter(s=>isGT(s)).forEach(s=>{subjectWeights[s]=w});
+  // rebuild grid only
+  const grid=document.getElementById('gtPenaltyGrid');
+  if(grid){
+    const gtSubjects=getEffectiveSubjects().filter(s=>isGT(s));
+    grid.innerHTML=gtSubjects.map(s=>penaltyRowHTML(s,true)).join('');
+  }
+  document.getElementById('applyAllGTRow').style.display='none';
+}
+
+// ── Maths drag & drop ──────────────────────────────────────────────────────────
+function renderMathsGroups(){
+  const c=document.getElementById('mathsGroupsContainer');if(!c)return;
+  let html='';
+
+  // Groups
+  mathsGroups.forEach(g=>{
+    html+=`<div class="maths-group-col">
+      <div class="maths-group-header">
+        <input class="maths-group-name-input" value="${eA(g.name)}" placeholder="Group name" onchange="renameGroup(${g.id},this.value)" title="Click to rename"/>
+        <button class="remove-group-btn" onclick="removeGroup(${g.id})">✕</button>
+      </div>
+      <div class="maths-drop-zone" id="dz__${g.id}">${g.codes.map(code=>chipHTML(code)).join('')}</div>
+    </div>`;
+  });
+  c.innerHTML=html;
+  attachDragListeners();
+}
+
+function chipHTML(code){
+  return`<div class="maths-class-chip" id="chip__${eA(code)}" draggable="true" data-code="${eA(code)}">${eH(code)}</div>`;
+}
+
+function attachDragListeners(){
+  // Chips
+  document.querySelectorAll('.maths-class-chip').forEach(chip=>{
+    chip.addEventListener('dragstart',e=>{
+      dragCode=chip.dataset.code;
+      dragFromZone=chip.closest('.maths-drop-zone').id;
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain',dragCode);
+      setTimeout(()=>chip.classList.add('dragging'),0);
+    });
+    chip.addEventListener('dragend',()=>{chip.classList.remove('dragging')});
+  });
+  // Chip remove buttons
+  document.querySelectorAll('.chip-x').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      moveCode(btn.dataset.code,'__unassigned');
+    });
+  });
+  // Drop zones
+  document.querySelectorAll('.maths-drop-zone').forEach(dz=>{
+    dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dz-over')});
+    dz.addEventListener('dragleave',e=>{if(!dz.contains(e.relatedTarget))dz.classList.remove('dz-over')});
+    dz.addEventListener('drop',e=>{
+      e.preventDefault();dz.classList.remove('dz-over');
+      const code=e.dataTransfer.getData('text/plain');
+      if(code)moveCode(code,dz.id);
+      dragCode=null;dragFromZone=null;
+    });
+  });
+}
+
+function moveCode(code,targetZoneId){
+  // Remove from all locations
+  mathsUnassigned=mathsUnassigned.filter(c=>c!==code);
+  mathsGroups.forEach(g=>{g.codes=g.codes.filter(c=>c!==code)});
+  if(targetZoneId==='__unassigned'||targetZoneId==='dz__unassigned'){
+    mathsUnassigned.push(code); // fallback, pool hidden but kept for safety
+  } else {
+    // Extract group id from zone id "dz__<id>"
+    const idStr=targetZoneId.replace('dz__','');
+    const id=parseInt(idStr);
+    const g=mathsGroups.find(x=>x.id===id);
+    if(g)g.codes.push(code);
+    else mathsUnassigned.push(code);
+  }
+  renderMathsGroups();
+}
+
+function addMathsGroup(){
+  mathsGroups.push({id:++groupIdSeq,name:'Group '+(mathsGroups.length+1),codes:[]});
+  renderMathsGroups();
+}
+function removeGroup(id){
+  const g=mathsGroups.find(x=>x.id===id);
+  if(g){
+    mathsGroups=mathsGroups.filter(x=>x.id!==id);
+    if(mathsGroups.length&&g.codes.length)mathsGroups[0].codes.push(...g.codes);
+    else g.codes.forEach(c=>mathsUnassigned.push(c));
+  }
+  renderMathsGroups();
+}
+function renameGroup(id,name){
+  const g=mathsGroups.find(x=>x.id===id);
+  if(g){
+    const oldKey='Maths: '+g.name,newKey='Maths: '+name;
+    g.name=name;
+    if(oldKey in subjectWeights){subjectWeights[newKey]=subjectWeights[oldKey];delete subjectWeights[oldKey]}
+  }
+}
+
+// ── Render tables ──────────────────────────────────────────────────────────────
+function renderTables(){
+  if(!parsedData)return;
+  const {students,allSubjects,scoreMode}=parsedData;
+  const isPercent=scoreMode==='percent';
+  let ws=isPercent?computeZScores(students,allSubjects):students;
+  const effSubjects=getEffectiveSubjects();
+  const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
+
+  function pillFor(s,subjName){
+    if(!s)return'<span class="pill missing">—</span>';
+    const gt=isGT(subjName);
+    if(isPercent){
+      const cls=s.score>=80?'top':s.score<50?'bottom':'';
+      return`<span class="pill ${cls}${gt?' gt-pill':''}">${s.score.toFixed(1)}%</span>`;
+    } else {
+      const r=s.rank/s.total;const cls=r<=0.25?'top':r>=0.75?'bottom':'';
+      return`<span class="pill ${cls}${gt?' gt-pill':''}">${s.rank}/${s.total}</span>`;
+    }
+  }
+
+  function thFor(s){
+    const gt=isGT(s);
+    return`<th class="center"${gt?' style="border-bottom:2px solid var(--gt-border)"':''}>${eH(s)}${gt?' <span style="font-size:.55rem;color:var(--gt-border)">G&T</span>':''}</th>`;
+  }
+
+  // ── Table 1 ──
+  document.getElementById('rankCount').textContent=`${students.length} students · ${effSubjects.length} subjects`;
+  let h=`<thead><tr><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects</th>`;
+  effSubjects.forEach(s=>{h+=thFor(s)});
+  h+='</tr></thead><tbody>';
+  ws.forEach(st=>{
+    const sm=buildSubMap(st);
+    const subList=effSubjects.filter(s=>sm[s]).join(', ');
+    h+=`<tr><td class="name">${eH(st.name)}</td><td class="subjects-list-cell col-subjects-list hide">${eH(subList)||'—'}</td><td class="center">${Object.keys(sm).length}</td>`;
+    effSubjects.forEach(s=>{h+=`<td class="center">${pillFor(sm[s],s)}</td>`});
+    h+='</tr>';
+  });
+  h+='</tbody>';
+  document.getElementById('rankTable').innerHTML=h;
+  if(!subjectsVisible[1])document.getElementById('rankTable').querySelectorAll('.col-subjects-list').forEach(el=>el.classList.add('hide'));
+
+  // Compute rankings
+  const anyW=isPercent&&effSubjects.some(s=>(subjectWeights[s]??1.0)!==1.0);
+  const ranked=ws.map(st=>{
+    const sm=buildSubMap(st);
+    const entries=effSubjects.map(s=>sm[s]).filter(Boolean);
+    let avg=null,rawZ=null;
+    if(entries.length){
+      if(isPercent){
+        let ws2=0,wt=0;entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws2+=s.z*w;wt+=w});
+        avg=wt>0?ws2/wt:null;
+        rawZ=entries.reduce((a,s)=>a+s.z,0)/entries.length;
+      } else {
+        avg=entries.reduce((a,s)=>a+s.rank,0)/entries.length;
+      }
+    }
+    return{...st,avg,rawZ,sm};
+  }).sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return-1;return isPercent?b.avg-a.avg:a.avg-b.avg});
+
+  const scoreLabel=isPercent?(anyW?'Wtd Avg Z':'Avg Z-Score'):'Avg Rank';
+  document.getElementById('boardCount').textContent=isPercent?(anyW?'Weighted avg z-score':'Avg z-score'):'Lowest average rank';
+
+  function leaderRows(list,showTop30Class){
+    return list.map((st,idx)=>{
+      const pos=idx+1;
+      const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
+      const pBadge=pos===1?'p1':pos===2?'p2':pos===3?'p3':showTop30Class&&pos<=30?'ptop30':'';
+      const rowCls=pos===1?'gold':showTop30Class&&pos<=30?'top30':'';
+      let avgCell;
+      if(st.avg===null){avgCell='—'}
+      else if(isPercent){
+        const d=st.avg.toFixed(3);
+        avgCell=anyW&&st.rawZ!==null?`<span class="has-tip" data-tip="Unweighted avg z: ${st.rawZ.toFixed(3)}">${d}</span>`:d;
+      } else {avgCell=st.avg.toFixed(2)}
+      let r=`<tr class="${rowCls}"><td class="center"><span class="position-badge ${pBadge}">${medal||pos}</span></td><td class="name">${eH(st.name)}</td>`;
+      if(showTop30Class!==false)r+=`<td class="subjects-list-cell col-subjects-list hide">${eH(effSubjects.filter(s=>st.sm[s]).join(', '))||'—'}</td>`;
+      r+=`<td class="center">${Object.keys(st.sm).length}</td><td class="center" style="font-weight:500">${avgCell}</td>`;
+      effSubjects.forEach(s=>{r+=`<td class="center">${pillFor(st.sm[s],s)}</td>`});
+      r+='</tr>';return r;
+    }).join('');
+  }
+
+  // ── Table 2 ──
+  let h2=`<thead><tr><th class="center">Pos</th><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects</th><th class="center">${scoreLabel}</th>`;
+  effSubjects.forEach(s=>{h2+=thFor(s)});
+  h2+=`</tr></thead><tbody>${leaderRows(ranked,isJunior())}</tbody>`;
+  document.getElementById('leaderTable').innerHTML=h2;
+  if(!subjectsVisible[2])document.getElementById('leaderTable').querySelectorAll('.col-subjects-list').forEach(el=>el.classList.add('hide'));
+
+  // ── Table 3: Top 30 ──
+  if(isJunior()){
+    const top30=ranked.slice(0,30);
+    document.getElementById('top30Count').textContent=top30.length+' students';
+    let h3=`<thead><tr><th class="center">Pos</th><th>Student</th><th class="center">Subjects</th><th class="center">${scoreLabel}</th>`;
+    effSubjects.forEach(s=>{h3+=thFor(s)});
+    h3+='</tr></thead><tbody>';
+    top30.forEach((st,idx)=>{
+      const pos=idx+1;const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
+      const pBadge=pos===1?'p1':pos===2?'p2':pos===3?'p3':'ptop30';
+      let avgCell=st.avg===null?'—':isPercent?(anyW&&st.rawZ!==null?`<span class="has-tip" data-tip="Unweighted: ${st.rawZ.toFixed(3)}">${st.avg.toFixed(3)}</span>`:st.avg.toFixed(3)):st.avg.toFixed(2);
+      h3+=`<tr class="top30"><td class="center"><span class="position-badge ${pBadge}">${medal||pos}</span></td><td class="name">${eH(st.name)}</td><td class="center">${Object.keys(st.sm).length}</td><td class="center" style="font-weight:500">${avgCell}</td>`;
+      effSubjects.forEach(s=>{h3+=`<td class="center">${pillFor(st.sm[s],s)}</td>`});
+      h3+='</tr>';
+    });
+    h3+='</tbody>';
+    document.getElementById('top30Table').innerHTML=h3;
+  }
+}
+
+// ── CSV Export ─────────────────────────────────────────────────────────────────
+function exportCSV(which){
+  if(!parsedData)return;
+  const {students,allSubjects,scoreMode}=parsedData;
+  const isPercent=scoreMode==='percent';
+  const year=document.getElementById('yearSelect').value;
+  let ws=isPercent?computeZScores(students,allSubjects):students;
+  const effSubjects=getEffectiveSubjects();
+
+  // Rank mode: output raw rank integer only (prevents Excel misreading "17/61" as a date)
+  // Percentage mode: output raw percentage number
+  function scoreVal(s){
+    if(!s)return'';
+    return isPercent?s.score.toFixed(1):String(s.rank);
+  }
+
+  // Row 2: cohort sizes per subject (blank for non-rank columns)
+  // Only meaningful in rank mode — shows total students in each course
+  function cohortVal(s){
+    if(isPercent)return'';
+    // Find any student who has this subject and return their total
+    for(const st of ws){
+      const sm=buildSubMap(st);
+      if(sm[s])return String(sm[s].total);
+    }
+    return'';
+  }
+
+  const sl=isPercent?'Avg Z-Score':'Avg Rank';
+  let rows=[];
+  if(which==='ranks'){
+    // Row 1: headers
+    rows.push(['Student','Subjects','Subjects Found',...effSubjects]);
+    // Row 2: cohort sizes (blank student/subjects cells, then total per subject)
+    rows.push(['Cohort size','','', ...effSubjects.map(s=>cohortVal(s))]);
+    // Row 3+: students
+    ws.forEach(st=>{const sm=buildSubMap(st);rows.push([st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,...effSubjects.map(s=>scoreVal(sm[s]))])});
+  } else {
+    const ranked=ws.map(st=>{
+      const sm=buildSubMap(st);const entries=effSubjects.map(s=>sm[s]).filter(Boolean);
+      let avg=null;
+      if(entries.length){if(isPercent){let ws2=0,wt=0;entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws2+=s.z*w;wt+=w});avg=wt>0?ws2/wt:null}else avg=entries.reduce((a,s)=>a+s.rank,0)/entries.length}
+      return{...st,avg,sm};
+    }).sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return-1;return isPercent?b.avg-a.avg:a.avg-b.avg});
+    // Row 1: headers
+    rows.push(['Position','Student','Subjects','Subjects Found',sl,...effSubjects]);
+    // Row 2: cohort sizes
+    rows.push(['','Cohort size','','','',...effSubjects.map(s=>cohortVal(s))]);
+    // Row 3+: students
+    ranked.forEach((st,i)=>{const sm=st.sm;rows.push([i+1,st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,st.avg!=null?st.avg.toFixed(3):'',...effSubjects.map(s=>scoreVal(sm[s]))])});
+  }
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`rankforge-year${year}-${which}.csv`;a.click();URL.revokeObjectURL(url);
+}
+
+// ── Reset ──────────────────────────────────────────────────────────────────────
+function reparseFile(){
+  if(!lastUploadedFile){setStatus('No file loaded — please upload a PDF first.','error');return;}
+  // Reset results but keep settings, then re-run
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('penaltyPanel').style.display='none';
+  document.getElementById('top30Section').style.display='none';
+  handleFile(lastUploadedFile);
+}
+
+function resetTool(){
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dragCode=null;lastUploadedFile=null;
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('uploadZone').style.display='';
+  document.getElementById('fileInput').value='';
+  document.getElementById('penaltyPanel').style.display='none';
+  document.getElementById('top30Section').style.display='none';
+  setStatus('');setProgress(null);
+  ['body1','body2','body3'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
+  ['header1','header2','header3'].forEach(id=>document.getElementById(id).classList.remove('collapsed'));
+  ['toggle1','toggle2','toggle3'].forEach(id=>{document.getElementById(id).textContent='collapse ▲'});
+}
+</script>
 </body>
 </html>
